@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,7 @@ const ListaONGs = () => {
   const { toast } = useToast();
   
   const [filtro, setFiltro] = useState({
-    estado: '',
+    estado: 'todos',
     cidade: '',
   });
   
@@ -82,7 +83,7 @@ const ListaONGs = () => {
     
     // Aplicar filtro
     const resultado = ongsData.filter(ong => {
-      const estadoMatch = !novoFiltro.estado || ong.estado.toLowerCase() === novoFiltro.estado.toLowerCase();
+      const estadoMatch = novoFiltro.estado === 'todos' || ong.estado.toLowerCase() === novoFiltro.estado.toLowerCase();
       const cidadeMatch = !novoFiltro.cidade || ong.cidade.toLowerCase().includes(novoFiltro.cidade.toLowerCase());
       return estadoMatch && cidadeMatch;
     });
@@ -130,7 +131,7 @@ const ListaONGs = () => {
                       <SelectValue placeholder="Todos os estados" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os estados</SelectItem>
+                      <SelectItem value="todos">Todos os estados</SelectItem>
                       <SelectItem value="SP">São Paulo</SelectItem>
                       <SelectItem value="RJ">Rio de Janeiro</SelectItem>
                       <SelectItem value="MG">Minas Gerais</SelectItem>
@@ -160,7 +161,7 @@ const ListaONGs = () => {
                 <Button 
                   variant="link" 
                   onClick={() => {
-                    setFiltro({ estado: '', cidade: '' });
+                    setFiltro({ estado: 'todos', cidade: '' });
                     setOngsFiltradas(ongsData);
                   }}
                 >

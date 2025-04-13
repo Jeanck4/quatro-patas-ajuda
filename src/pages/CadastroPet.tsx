@@ -43,7 +43,6 @@ const CadastroPet = () => {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -58,7 +57,6 @@ const CadastroPet = () => {
       [name]: value
     }));
     
-    // Clear error when user makes a selection
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -92,7 +90,6 @@ const CadastroPet = () => {
         description: `${formData.nome} foi adicionado à sua lista de pets.`,
       });
       
-      // Limpar formulário para adicionar outro pet
       setFormData({
         id: Date.now().toString(),
         nome: '',
@@ -115,7 +112,6 @@ const CadastroPet = () => {
       return;
     }
     
-    // Aqui será implementada a integração com o banco de dados
     console.log('Lista de pets enviada:', pets);
     
     toast({
@@ -123,7 +119,6 @@ const CadastroPet = () => {
       description: `${pets.length} ${pets.length === 1 ? 'pet foi cadastrado' : 'pets foram cadastrados'} com sucesso.`,
     });
     
-    // Redirecionar para a página de listagem de ONGs
     setTimeout(() => {
       navigate('/ongs');
     }, 2000);
@@ -246,7 +241,6 @@ const CadastroPet = () => {
             </form>
           </Card>
           
-          {/* Lista de Pets */}
           <div className="mb-8">
             <h3 className="text-xl font-medium mb-4">Pets Cadastrados ({pets.length})</h3>
             
