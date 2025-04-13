@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
+import * as db from '@/database/conexao.js';
 
 const CadastroOng = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const CadastroOng = () => {
     descricao: '',
   });
 
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -76,22 +78,47 @@ const CadastroOng = () => {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Aqui será implementada a integração com o banco de dados
-      console.log('Dados da ONG enviados:', formData);
-      
-      toast({
-        title: "Cadastro realizado!",
-        description: "Seus dados foram enviados com sucesso.",
-      });
-      
-      // Redirecionar para a página de login ou dashboard da ONG
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      setLoading(true);
+      try {
+        // Enviar dados para o banco (ou para o mock de banco)
+        console.log('Dados da ONG enviados:', formData);
+        
+        const resultado = await db.inserirOng(formData);
+        
+        if (resultado.sucesso) {
+          // Salva o ID da ONG no localStorage para uso futuro
+          localStorage.setItem('ongId', resultado.id);
+          
+          toast({
+            title: "Cadastro realizado!",
+            description: `Seus dados foram enviados com sucesso. ID: ${resultado.id}`,
+          });
+          
+          // Redirecionar para a página de login ou dashboard da ONG
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000);
+        } else {
+          toast({
+            title: "Erro no cadastro",
+            description: resultado.erro || "Ocorreu um erro ao salvar os dados",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao cadastrar ONG:', error);
+        toast({
+          title: "Erro no cadastro",
+          description: "Ocorreu um erro ao processar sua solicitação",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
   
@@ -275,8 +302,16 @@ const CadastroOng = () => {
                 <Button type="button" variant="outline" onClick={() => navigate('/')}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary-600">
-                  <Check className="mr-2 h-4 w-4" /> Finalizar Cadastro
+                <Button type="submit" className="bg-primary hover:bg-primary-600" disabled={loading}>
+                  {loading ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin mr-2">⏳</span> Processando...
+                    </span>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" /> Finalizar Cadastro
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </form>

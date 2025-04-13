@@ -111,6 +111,8 @@ const CadastroTutor = () => {
         const resultado = await db.inserirTutor(formData);
         
         if (resultado.sucesso) {
+          localStorage.setItem('tutorId', resultado.id);
+          
           toast({
             title: "Cadastro realizado!",
             description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
