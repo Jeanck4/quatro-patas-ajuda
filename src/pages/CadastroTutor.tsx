@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { useToast } from '@/components/ui/use-toast';
-import db from '@/database/conexao';
+import { useToast } from '@/hooks/use-toast';
+import * as db from '@/database/conexao.js';
 
 const CadastroTutor = () => {
   const navigate = useNavigate();
@@ -107,7 +106,6 @@ const CadastroTutor = () => {
     if (validateForm()) {
       setLoading(true);
       try {
-        // Integração com o banco de dados
         console.log('Dados do tutor sendo enviados:', formData);
         
         const resultado = await db.inserirTutor(formData);
@@ -118,7 +116,6 @@ const CadastroTutor = () => {
             description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
           });
           
-          // Redirecionar para a página de cadastro de pets
           setTimeout(() => {
             navigate('/cadastro/pet');
           }, 2000);
