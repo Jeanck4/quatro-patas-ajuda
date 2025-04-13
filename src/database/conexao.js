@@ -1,153 +1,89 @@
 
 /**
- * Conexão com o banco de dados PostgreSQL
+ * Mock da conexão com o banco de dados PostgreSQL para ambiente de frontend
  * 
- * Instruções para uso:
- * 1. Certifique-se de ter o Node.js instalado
- * 2. Instale o pacote pg usando: npm install pg
- * 3. Ajuste os parâmetros de conexão abaixo conforme seu ambiente
+ * Esta versão simula as operações de banco de dados para desenvolvimento frontend.
+ * Em produção, estas chamadas seriam substituídas por requisições a uma API backend.
  */
 
-const { Pool } = require('pg');
+// Mock de dados para simular o armazenamento
+const mockStorage = {
+  tutores: [],
+  pets: [],
+  ongs: []
+};
 
-// Configuração de conexão com o banco de dados
-const pool = new Pool({
-  user: process.env.DB_USER || 'seu_usuario',      // Substitua pelo seu usuário do PostgreSQL
-  host: process.env.DB_HOST || 'localhost',        // Endereço do servidor PostgreSQL
-  database: process.env.DB_NAME || 'quatro_patas', // Nome do banco de dados que você criou
-  password: process.env.DB_PASSWORD || 'sua_senha', // Substitua pela sua senha do PostgreSQL
-  port: process.env.DB_PORT || 5432,               // Porta padrão do PostgreSQL
-  max: 20,                                         // Número máximo de conexões no pool
-  idleTimeoutMillis: 30000,                        // Tempo limite de conexões ociosas
-  connectionTimeoutMillis: 2000,                   // Tempo limite para estabelecer uma conexão
-});
-
-// Função para testar a conexão
-const testarConexao = async () => {
+// Simula a função para testar a conexão
+export const testarConexao = async () => {
   try {
-    const client = await pool.connect();
-    const resultado = await client.query('SELECT NOW() as agora');
-    console.log('Conexão com o PostgreSQL estabelecida com sucesso!');
-    console.log('Hora do servidor:', resultado.rows[0].agora);
-    client.release();
-    return { sucesso: true, dados: resultado.rows[0] };
+    // Simula uma consulta bem-sucedida
+    const agora = new Date().toISOString();
+    console.log('Conexão com o PostgreSQL (simulada) estabelecida com sucesso!');
+    console.log('Hora do servidor (simulada):', agora);
+    return { sucesso: true, dados: { agora } };
   } catch (error) {
-    console.error('Erro ao conectar ao PostgreSQL:', error);
+    console.error('Erro ao conectar (simulado):', error);
     return { sucesso: false, erro: error.message };
   }
 };
 
-// Função para inserir um tutor no banco de dados
-const inserirTutor = async (tutor) => {
-  const client = await pool.connect();
+// Simula a função para inserir um tutor
+export const inserirTutor = async (tutor) => {
   try {
-    await client.query('BEGIN');
+    // Gera um ID único
+    const tutorId = Date.now().toString();
+    const novoTutor = { ...tutor, id: tutorId };
     
-    const queryTutor = `
-      INSERT INTO tutores (nome, email, senha, telefone, cpf, endereco, cidade, estado, cep)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id`;
+    // Armazena no mock de dados
+    mockStorage.tutores.push(novoTutor);
     
-    const valuesTutor = [
-      tutor.nome, 
-      tutor.email, 
-      tutor.senha, 
-      tutor.telefone, 
-      tutor.cpf, 
-      tutor.endereco, 
-      tutor.cidade, 
-      tutor.estado, 
-      tutor.cep
-    ];
-    
-    const resultado = await client.query(queryTutor, valuesTutor);
-    const tutorId = resultado.rows[0].id;
-    
-    await client.query('COMMIT');
     console.log('Tutor cadastrado com sucesso! ID:', tutorId);
     return { sucesso: true, id: tutorId };
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Erro ao cadastrar tutor:', error);
+    console.error('Erro ao cadastrar tutor (simulado):', error);
     return { sucesso: false, erro: error.message };
-  } finally {
-    client.release();
   }
 };
 
-// Função para inserir um pet no banco de dados
-const inserirPet = async (pet, tutorId) => {
-  const client = await pool.connect();
+// Simula a função para inserir um pet
+export const inserirPet = async (pet, tutorId) => {
   try {
-    const query = `
-      INSERT INTO pets (tutor_id, nome, especie, raca, idade, sexo, peso)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id`;
+    const petId = Date.now().toString();
+    const novoPet = { ...pet, id: petId, tutor_id: tutorId };
     
-    const values = [
-      tutorId, 
-      pet.nome, 
-      pet.especie, 
-      pet.raca, 
-      pet.idade, 
-      pet.sexo, 
-      pet.peso
-    ];
-    
-    const resultado = await client.query(query, values);
-    const petId = resultado.rows[0].id;
+    mockStorage.pets.push(novoPet);
     
     console.log('Pet cadastrado com sucesso! ID:', petId);
     return { sucesso: true, id: petId };
   } catch (error) {
-    console.error('Erro ao cadastrar pet:', error);
+    console.error('Erro ao cadastrar pet (simulado):', error);
     return { sucesso: false, erro: error.message };
-  } finally {
-    client.release();
   }
 };
 
-// Função para inserir uma ONG no banco de dados
-const inserirOng = async (ong) => {
-  const client = await pool.connect();
+// Simula a função para inserir uma ONG
+export const inserirOng = async (ong) => {
   try {
-    const query = `
-      INSERT INTO ongs (nome, email, senha, telefone, cnpj, endereco, cidade, estado, cep, descricao)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING id`;
+    const ongId = Date.now().toString();
+    const novaOng = { ...ong, id: ongId };
     
-    const values = [
-      ong.nome, 
-      ong.email, 
-      ong.senha, 
-      ong.telefone, 
-      ong.cnpj, 
-      ong.endereco, 
-      ong.cidade, 
-      ong.estado, 
-      ong.cep,
-      ong.descricao
-    ];
-    
-    const resultado = await client.query(query, values);
-    const ongId = resultado.rows[0].id;
+    mockStorage.ongs.push(novaOng);
     
     console.log('ONG cadastrada com sucesso! ID:', ongId);
     return { sucesso: true, id: ongId };
   } catch (error) {
-    console.error('Erro ao cadastrar ONG:', error);
+    console.error('Erro ao cadastrar ONG (simulada):', error);
     return { sucesso: false, erro: error.message };
-  } finally {
-    client.release();
   }
 };
 
-// Exporta as funções e o pool para uso em outros arquivos
-module.exports = {
-  pool,
-  testarConexao,
-  inserirTutor,
-  inserirPet,
-  inserirOng,
-  query: (text, params) => pool.query(text, params),
+// Simula uma função de consulta genérica
+export const query = async (text, params) => {
+  console.log('Consulta simulada:', text, params);
+  return { rows: [], rowCount: 0 };
+};
+
+// Função para obter os dados mock (para depuração)
+export const getMockStorage = () => {
+  return mockStorage;
 };

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Check, Plus } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
+import * as db from '@/database/conexao.js';
 
 interface Pet {
   id: string;
@@ -35,6 +36,7 @@ const CadastroPet = () => {
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,26 +81,50 @@ const CadastroPet = () => {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleAddPet = (e: React.FormEvent) => {
+  const handleAddPet = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validatePetForm()) {
-      setPets(prev => [...prev, formData]);
-      
-      toast({
-        title: "Pet adicionado!",
-        description: `${formData.nome} foi adicionado à sua lista de pets.`,
-      });
-      
-      setFormData({
-        id: Date.now().toString(),
-        nome: '',
-        especie: '',
-        raca: '',
-        idade: '',
-        sexo: '',
-        peso: ''
-      });
+      setLoading(true);
+      try {
+        const tutorId = localStorage.getItem('tutorId') || '1';
+        
+        const resultado = await db.inserirPet(formData, tutorId);
+        
+        if (resultado.sucesso) {
+          setPets(prev => [...prev, { ...formData, id: resultado.id }]);
+          
+          toast({
+            title: "Pet adicionado!",
+            description: `${formData.nome} foi adicionado à sua lista de pets.`,
+          });
+          
+          setFormData({
+            id: Date.now().toString(),
+            nome: '',
+            especie: '',
+            raca: '',
+            idade: '',
+            sexo: '',
+            peso: ''
+          });
+        } else {
+          toast({
+            title: "Erro ao adicionar pet",
+            description: resultado.erro || "Erro ao salvar os dados do pet",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao adicionar pet:', error);
+        toast({
+          title: "Erro ao adicionar pet",
+          description: "Ocorreu um erro ao salvar os dados",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
   
@@ -234,8 +260,16 @@ const CadastroPet = () => {
                   </div>
                 </div>
                 
-                <Button type="submit" className="w-full mt-4 bg-accent hover:bg-accent-600">
-                  <Plus className="mr-2 h-4 w-4" /> Adicionar Pet
+                <Button type="submit" className="w-full mt-4 bg-accent hover:bg-accent-600" disabled={loading}>
+                  {loading ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin mr-2">⏳</span> Processando...
+                    </span>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" /> Adicionar Pet
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </form>
@@ -277,7 +311,7 @@ const CadastroPet = () => {
               Voltar
             </Button>
             
-            <Button className="bg-primary hover:bg-primary-600" onClick={handleFinish}>
+            <Button className="bg-primary hover:bg-primary-600" onClick={handleFinish} disabled={loading}>
               <Check className="mr-2 h-4 w-4" /> Finalizar Cadastro
             </Button>
           </div>
