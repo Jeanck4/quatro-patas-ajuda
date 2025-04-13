@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 
 const CadastroOng = () => {
   const navigate = useNavigate();

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Heart, MapPin, Phone } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 
 // Dados de exemplo das ONGs
 const ongsData = [

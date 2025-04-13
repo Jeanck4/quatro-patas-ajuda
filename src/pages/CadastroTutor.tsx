@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 
 const CadastroTutor = () => {
   const navigate = useNavigate();
