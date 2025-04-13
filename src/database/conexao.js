@@ -8,7 +8,8 @@
  * 3. Ajuste os parâmetros de conexão abaixo conforme seu ambiente
  */
 
-const { Pool } = require('pg');
+import pkg from 'pg';
+const { Pool } = pkg;
 
 // Configuração de conexão com o banco de dados
 const pool = new Pool({
@@ -23,7 +24,7 @@ const pool = new Pool({
 });
 
 // Função para testar a conexão
-const testarConexao = async () => {
+export const testarConexao = async () => {
   try {
     const client = await pool.connect();
     const resultado = await client.query('SELECT NOW() as agora');
@@ -38,7 +39,7 @@ const testarConexao = async () => {
 };
 
 // Função para inserir um tutor no banco de dados
-const inserirTutor = async (tutor) => {
+export const inserirTutor = async (tutor) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -76,7 +77,7 @@ const inserirTutor = async (tutor) => {
 };
 
 // Função para inserir um pet no banco de dados
-const inserirPet = async (pet, tutorId) => {
+export const inserirPet = async (pet, tutorId) => {
   const client = await pool.connect();
   try {
     const query = `
@@ -108,7 +109,7 @@ const inserirPet = async (pet, tutorId) => {
 };
 
 // Função para inserir uma ONG no banco de dados
-const inserirOng = async (ong) => {
+export const inserirOng = async (ong) => {
   const client = await pool.connect();
   try {
     const query = `
@@ -142,12 +143,6 @@ const inserirOng = async (ong) => {
   }
 };
 
-// Exporta as funções e o pool para uso em outros arquivos
-module.exports = {
-  pool,
-  testarConexao,
-  inserirTutor,
-  inserirPet,
-  inserirOng,
-  query: (text, params) => pool.query(text, params),
-};
+// Exporta a função de consulta para uso em outros arquivos
+export const query = (text, params) => pool.query(text, params);
+
