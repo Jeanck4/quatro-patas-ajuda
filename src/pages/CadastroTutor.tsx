@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import * as db from '@/database/conexao.js';
 
 const CadastroTutor = () => {
   const navigate = useNavigate();
@@ -24,7 +25,8 @@ const CadastroTutor = () => {
     estado: '',
     cep: '',
   });
-
+  
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +36,6 @@ const CadastroTutor = () => {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -74,22 +75,67 @@ const CadastroTutor = () => {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const testarConexaoBanco = async () => {
+    try {
+      const resultado = await db.testarConexao();
+      if (resultado.sucesso) {
+        toast({
+          title: "Conexão com o banco bem-sucedida!",
+          description: `Servidor respondeu em: ${resultado.dados.agora}`,
+        });
+      } else {
+        toast({
+          title: "Falha na conexão!",
+          description: resultado.erro,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao testar conexão:', error);
+      toast({
+        title: "Erro no teste de conexão",
+        description: "Verifique o console para mais detalhes",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Aqui será implementada a integração com o banco de dados
-      console.log('Dados do tutor enviados:', formData);
-      
-      toast({
-        title: "Cadastro realizado!",
-        description: "Seus dados foram enviados com sucesso.",
-      });
-      
-      // Redirecionar para a página de cadastro de pets
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      setLoading(true);
+      try {
+        console.log('Dados do tutor sendo enviados:', formData);
+        
+        const resultado = await db.inserirTutor(formData);
+        
+        if (resultado.sucesso) {
+          toast({
+            title: "Cadastro realizado!",
+            description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
+          });
+          
+          setTimeout(() => {
+            navigate('/cadastro/pet');
+          }, 2000);
+        } else {
+          toast({
+            title: "Erro no cadastro",
+            description: resultado.erro || "Ocorreu um erro ao salvar os dados",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao cadastrar tutor:', error);
+        toast({
+          title: "Erro no cadastro",
+          description: "Ocorreu um erro ao processar sua solicitação",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
   
@@ -258,11 +304,32 @@ const CadastroTutor = () => {
               </CardContent>
               
               <CardFooter className="flex flex-col md:flex-row gap-4 md:justify-between">
-                <Button type="button" variant="outline" onClick={() => navigate('/')}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary-600">
-                  <Check className="mr-2 h-4 w-4" /> Finalizar Cadastro
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => navigate('/')}>
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    onClick={testarConexaoBanco}
+                  >
+                    Testar Conexão
+                  </Button>
+                </div>
+                <Button 
+                  type="submit" 
+                  className="bg-primary hover:bg-primary-600"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin mr-2">⏳</span> Processando...
+                    </span>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" /> Finalizar Cadastro
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </form>
