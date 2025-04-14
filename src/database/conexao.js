@@ -22,8 +22,8 @@ if (!isBrowser) {
 const poolConfig = !isBrowser ? {
   user: 'postgres',
   host: 'localhost',
-  database: 'postgres',
-  password: 'postgres',
+  database: 'quatro_patas',
+  password: 'admin',
   port: 5432,
 } : null;
 
