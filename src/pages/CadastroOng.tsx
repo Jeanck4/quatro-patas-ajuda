@@ -1,11 +1,12 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Check } from 'lucide-react';
+import { Check, AlertTriangle, Server } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
 import * as db from '@/database/conexao.js';
@@ -30,6 +31,21 @@ const CadastroOng = () => {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [ambiente, setAmbiente] = useState<'browser' | 'servidor' | ''>('');
+  
+  useEffect(() => {
+    const verificarAmbiente = async () => {
+      try {
+        const resultado = await db.testarConexao();
+        setAmbiente(resultado.ambiente || 'browser');
+      } catch (error) {
+        console.error('Erro ao verificar ambiente:', error);
+        setAmbiente('browser');
+      }
+    };
+    
+    verificarAmbiente();
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -86,13 +102,14 @@ const CadastroOng = () => {
         console.log('Dados da ONG sendo enviados para o banco:', formData);
         
         const resultado = await db.inserirOng(formData);
+        setAmbiente(resultado.ambiente || 'browser');
         
         if (resultado.sucesso) {
           localStorage.setItem('ongId', resultado.id);
           
           toast({
             title: "Cadastro realizado!",
-            description: `Seus dados foram salvos no banco de dados. ID: ${resultado.id}`,
+            description: `Seus dados foram salvos ${resultado.ambiente === 'servidor' ? 'no PostgreSQL' : 'localmente'}. ID: ${resultado.id}`,
           });
           
           setTimeout(() => {
@@ -101,7 +118,7 @@ const CadastroOng = () => {
         } else {
           toast({
             title: "Erro no cadastro",
-            description: resultado.erro || "Ocorreu um erro ao salvar os dados no banco",
+            description: resultado.erro || "Ocorreu um erro ao salvar os dados",
             variant: "destructive"
           });
         }
@@ -109,7 +126,7 @@ const CadastroOng = () => {
         console.error('Erro ao cadastrar ONG:', error);
         toast({
           title: "Erro no cadastro",
-          description: "Ocorreu um erro ao processar sua solicitação no banco de dados",
+          description: "Ocorreu um erro ao processar sua solicitação",
           variant: "destructive"
         });
       } finally {
@@ -122,6 +139,31 @@ const CadastroOng = () => {
     <MainLayout>
       <div className="container py-10">
         <div className="max-w-3xl mx-auto">
+          {ambiente === 'browser' && (
+            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded flex items-center">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
+              <div>
+                <h3 className="font-bold text-yellow-700">Atenção: Modo Navegador</h3>
+                <p className="text-sm text-yellow-700">
+                  Você está rodando o aplicativo apenas no navegador. Os dados serão salvos temporariamente 
+                  no localStorage e não no banco PostgreSQL. Para usar o PostgreSQL, execute o app em um servidor Node.js.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {ambiente === 'servidor' && (
+            <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
+              <Server className="h-5 w-5 text-green-600 mr-2" />
+              <div>
+                <h3 className="font-bold text-green-700">Conectado ao PostgreSQL</h3>
+                <p className="text-sm text-green-700">
+                  Seu app está conectado ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
+                </p>
+              </div>
+            </div>
+          )}
+          
           <Card className="border shadow-md">
             <CardHeader>
               <CardTitle className="text-2xl text-primary">Cadastro de ONG</CardTitle>

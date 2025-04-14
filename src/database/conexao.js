@@ -14,7 +14,7 @@ if (!isBrowser) {
     const pg = require('pg');
     Pool = pg.Pool;
   } catch (error) {
-    console.warn('Failed to import pg module:', error);
+    console.error('Failed to import pg module:', error);
   }
 }
 
@@ -35,7 +35,7 @@ export const testarConexao = async () => {
   if (isBrowser) {
     console.warn('Usando mock de conexão em ambiente de navegador');
     const agora = new Date().toISOString();
-    return { sucesso: true, dados: { agora } };
+    return { sucesso: true, dados: { agora }, ambiente: 'browser' };
   }
 
   try {
@@ -47,17 +47,20 @@ export const testarConexao = async () => {
     console.log('Current time:', agora);
     
     client.release();
-    return { sucesso: true, dados: { agora } };
+    return { sucesso: true, dados: { agora }, ambiente: 'servidor' };
   } catch (error) {
     console.error('Error connecting to database:', error);
-    return { sucesso: false, erro: error.message };
+    return { sucesso: false, erro: error.message, ambiente: 'servidor' };
   }
 };
 
 // Função para inserir um tutor
 export const inserirTutor = async (tutor) => {
   if (isBrowser) {
-    console.warn('Usando mock de inserção de tutor em ambiente de navegador');
+    console.warn('AVISO: Executando em ambiente de navegador - os dados não serão salvos no PostgreSQL');
+    console.warn('Use esta aplicação em um ambiente de servidor para salvar no banco PostgreSQL');
+    
+    // Simulação de inserção para ambiente de navegador
     const tutores = JSON.parse(localStorage.getItem('tutores') || '[]');
     const tutorId = Date.now().toString();
     
@@ -77,8 +80,8 @@ export const inserirTutor = async (tutor) => {
     tutores.push(novoTutor);
     localStorage.setItem('tutores', JSON.stringify(tutores));
     
-    console.log('Tutor cadastrado com sucesso (mock)! ID:', tutorId);
-    return { sucesso: true, id: tutorId };
+    console.log('Mock: Tutor cadastrado com ID:', tutorId);
+    return { sucesso: true, id: tutorId, ambiente: 'browser' };
   }
 
   try {
@@ -94,18 +97,21 @@ export const inserirTutor = async (tutor) => {
     const tutorId = result.rows[0].tutor_id;
     client.release();
     
-    console.log('Tutor cadastrado com sucesso! ID:', tutorId);
-    return { sucesso: true, id: tutorId };
+    console.log('PostgreSQL: Tutor cadastrado com ID:', tutorId);
+    return { sucesso: true, id: tutorId, ambiente: 'servidor' };
   } catch (error) {
-    console.error('Erro ao cadastrar tutor:', error);
-    return { sucesso: false, erro: error.message };
+    console.error('Erro ao cadastrar tutor no PostgreSQL:', error);
+    return { sucesso: false, erro: error.message, ambiente: 'servidor' };
   }
 };
 
 // Função para inserir um pet
 export const inserirPet = async (pet, tutorId) => {
   if (isBrowser) {
-    console.warn('Usando mock de inserção de pet em ambiente de navegador');
+    console.warn('AVISO: Executando em ambiente de navegador - os dados não serão salvos no PostgreSQL');
+    console.warn('Use esta aplicação em um ambiente de servidor para salvar no banco PostgreSQL');
+    
+    // Simulação de inserção para ambiente de navegador
     const pets = JSON.parse(localStorage.getItem('pets') || '[]');
     const petId = Date.now().toString();
     
@@ -123,8 +129,8 @@ export const inserirPet = async (pet, tutorId) => {
     pets.push(novoPet);
     localStorage.setItem('pets', JSON.stringify(pets));
     
-    console.log('Pet cadastrado com sucesso (mock)! ID:', petId);
-    return { sucesso: true, id: petId };
+    console.log('Mock: Pet cadastrado com ID:', petId);
+    return { sucesso: true, id: petId, ambiente: 'browser' };
   }
 
   try {
@@ -140,18 +146,21 @@ export const inserirPet = async (pet, tutorId) => {
     const petId = result.rows[0].pet_id;
     client.release();
     
-    console.log('Pet cadastrado com sucesso! ID:', petId);
-    return { sucesso: true, id: petId };
+    console.log('PostgreSQL: Pet cadastrado com ID:', petId);
+    return { sucesso: true, id: petId, ambiente: 'servidor' };
   } catch (error) {
-    console.error('Erro ao cadastrar pet:', error);
-    return { sucesso: false, erro: error.message };
+    console.error('Erro ao cadastrar pet no PostgreSQL:', error);
+    return { sucesso: false, erro: error.message, ambiente: 'servidor' };
   }
 };
 
 // Função para inserir uma ONG
 export const inserirOng = async (ong) => {
   if (isBrowser) {
-    console.warn('Usando mock de inserção de ONG em ambiente de navegador');
+    console.warn('AVISO: Executando em ambiente de navegador - os dados não serão salvos no PostgreSQL');
+    console.warn('Use esta aplicação em um ambiente de servidor para salvar no banco PostgreSQL');
+    
+    // Simulação de inserção para ambiente de navegador
     const ongs = JSON.parse(localStorage.getItem('ongs') || '[]');
     const ongId = Date.now().toString();
     
@@ -172,8 +181,8 @@ export const inserirOng = async (ong) => {
     ongs.push(novaOng);
     localStorage.setItem('ongs', JSON.stringify(ongs));
     
-    console.log('ONG cadastrada com sucesso (mock)! ID:', ongId);
-    return { sucesso: true, id: ongId };
+    console.log('Mock: ONG cadastrada com ID:', ongId);
+    return { sucesso: true, id: ongId, ambiente: 'browser' };
   }
 
   try {
@@ -189,29 +198,30 @@ export const inserirOng = async (ong) => {
     const ongId = result.rows[0].ong_id;
     client.release();
     
-    console.log('ONG cadastrada com sucesso! ID:', ongId);
-    return { sucesso: true, id: ongId };
+    console.log('PostgreSQL: ONG cadastrada com ID:', ongId);
+    return { sucesso: true, id: ongId, ambiente: 'servidor' };
   } catch (error) {
-    console.error('Erro ao cadastrar ONG:', error);
-    return { sucesso: false, erro: error.message };
+    console.error('Erro ao cadastrar ONG no PostgreSQL:', error);
+    return { sucesso: false, erro: error.message, ambiente: 'servidor' };
   }
 };
 
 // Função genérica para executar queries
 export const query = async (text, params) => {
   if (isBrowser) {
-    console.warn('Usando mock de query em ambiente de navegador');
-    console.log('Mock query executed with:', { text, params });
-    return { rows: [] };
+    console.warn('AVISO: Tentativa de executar query SQL em ambiente de navegador');
+    console.warn('Esta operação só funciona em ambiente de servidor');
+    console.log('Mock query:', { text, params });
+    return { rows: [], ambiente: 'browser' };
   }
 
   try {
     const client = await pool.connect();
     const result = await client.query(text, params);
     client.release();
-    return result;
+    return { ...result, ambiente: 'servidor' };
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error('Erro ao executar query no PostgreSQL:', error);
     throw error;
   }
 };
