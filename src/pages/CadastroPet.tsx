@@ -96,7 +96,7 @@ const CadastroPet = () => {
           
           toast({
             title: "Pet adicionado!",
-            description: `${formData.nome} foi adicionado à sua lista de pets.`,
+            description: `${formData.nome} foi adicionado ao banco de dados.`,
           });
           
           setFormData({
@@ -111,7 +111,7 @@ const CadastroPet = () => {
         } else {
           toast({
             title: "Erro ao adicionar pet",
-            description: resultado.erro || "Erro ao salvar os dados do pet",
+            description: resultado.erro || "Erro ao salvar os dados do pet no banco",
             variant: "destructive"
           });
         }
@@ -119,7 +119,7 @@ const CadastroPet = () => {
         console.error('Erro ao adicionar pet:', error);
         toast({
           title: "Erro ao adicionar pet",
-          description: "Ocorreu um erro ao salvar os dados",
+          description: "Ocorreu um erro ao salvar os dados no banco",
           variant: "destructive"
         });
       } finally {
@@ -138,11 +138,11 @@ const CadastroPet = () => {
       return;
     }
     
-    console.log('Lista de pets enviada:', pets);
+    console.log('Lista de pets enviada ao banco:', pets);
     
     toast({
       title: "Cadastro finalizado!",
-      description: `${pets.length} ${pets.length === 1 ? 'pet foi cadastrado' : 'pets foram cadastrados'} com sucesso.`,
+      description: `${pets.length} ${pets.length === 1 ? 'pet foi cadastrado' : 'pets foram cadastrados'} com sucesso no banco de dados.`,
     });
     
     setTimeout(() => {

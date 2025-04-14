@@ -106,7 +106,7 @@ const CadastroTutor = () => {
     if (validateForm()) {
       setLoading(true);
       try {
-        console.log('Dados do tutor sendo enviados:', formData);
+        console.log('Dados do tutor sendo enviados para o banco:', formData);
         
         const resultado = await db.inserirTutor(formData);
         
@@ -115,7 +115,7 @@ const CadastroTutor = () => {
           
           toast({
             title: "Cadastro realizado!",
-            description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
+            description: `Seus dados foram salvos no banco de dados. ID: ${resultado.id}`,
           });
           
           setTimeout(() => {
@@ -124,7 +124,7 @@ const CadastroTutor = () => {
         } else {
           toast({
             title: "Erro no cadastro",
-            description: resultado.erro || "Ocorreu um erro ao salvar os dados",
+            description: resultado.erro || "Ocorreu um erro ao salvar os dados no banco",
             variant: "destructive"
           });
         }
@@ -132,7 +132,7 @@ const CadastroTutor = () => {
         console.error('Erro ao cadastrar tutor:', error);
         toast({
           title: "Erro no cadastro",
-          description: "Ocorreu um erro ao processar sua solicitação",
+          description: "Ocorreu um erro ao processar sua solicitação no banco de dados",
           variant: "destructive"
         });
       } finally {

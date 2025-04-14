@@ -38,7 +38,6 @@ const CadastroOng = () => {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -84,28 +83,25 @@ const CadastroOng = () => {
     if (validateForm()) {
       setLoading(true);
       try {
-        // Enviar dados para o banco (ou para o mock de banco)
-        console.log('Dados da ONG enviados:', formData);
+        console.log('Dados da ONG sendo enviados para o banco:', formData);
         
         const resultado = await db.inserirOng(formData);
         
         if (resultado.sucesso) {
-          // Salva o ID da ONG no localStorage para uso futuro
           localStorage.setItem('ongId', resultado.id);
           
           toast({
             title: "Cadastro realizado!",
-            description: `Seus dados foram enviados com sucesso. ID: ${resultado.id}`,
+            description: `Seus dados foram salvos no banco de dados. ID: ${resultado.id}`,
           });
           
-          // Redirecionar para a página de login ou dashboard da ONG
           setTimeout(() => {
             navigate('/login');
           }, 2000);
         } else {
           toast({
             title: "Erro no cadastro",
-            description: resultado.erro || "Ocorreu um erro ao salvar os dados",
+            description: resultado.erro || "Ocorreu um erro ao salvar os dados no banco",
             variant: "destructive"
           });
         }
@@ -113,7 +109,7 @@ const CadastroOng = () => {
         console.error('Erro ao cadastrar ONG:', error);
         toast({
           title: "Erro no cadastro",
-          description: "Ocorreu um erro ao processar sua solicitação",
+          description: "Ocorreu um erro ao processar sua solicitação no banco de dados",
           variant: "destructive"
         });
       } finally {
