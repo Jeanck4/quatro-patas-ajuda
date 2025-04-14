@@ -103,3 +103,85 @@ export const inserirOng = async (ong: any): Promise<ApiResponse<never>> => {
     };
   }
 };
+
+/**
+ * Realiza login de tutores
+ */
+export const loginTutor = async (email: string, senha: string): Promise<ApiResponse<{tutor: any}>> => {
+  try {
+    const response = await fetch(`${API_URL}/login/tutor`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, senha }),
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao fazer login como tutor:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao fazer login' 
+    };
+  }
+};
+
+/**
+ * Realiza login de ONGs
+ */
+export const loginOng = async (email: string, senha: string): Promise<ApiResponse<{ong: any}>> => {
+  try {
+    const response = await fetch(`${API_URL}/login/ong`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, senha }),
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao fazer login como ONG:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao fazer login' 
+    };
+  }
+};
+
+/**
+ * Busca os pets de um tutor
+ */
+export const buscarPetsTutor = async (tutorId: string): Promise<ApiResponse<{pets: any[]}>> => {
+  try {
+    const response = await fetch(`${API_URL}/tutores/${tutorId}/pets`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar pets:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao buscar pets' 
+    };
+  }
+};
+
+/**
+ * Busca todas as ONGs cadastradas
+ */
+export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
+  try {
+    const response = await fetch(`${API_URL}/ongs`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar ONGs:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao buscar ONGs' 
+    };
+  }
+};

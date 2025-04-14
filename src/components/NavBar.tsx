@@ -2,12 +2,19 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Dog, User } from 'lucide-react';
+import { Menu, X, Dog, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
@@ -48,13 +55,34 @@ const NavBar = () => {
           >
             ONGs
           </NavLink>
-          <Button variant="outline" onClick={() => navigate('/cadastro')}>
-            Cadastre-se
-          </Button>
-          <Button onClick={() => navigate('/login')}>
-            <User className="h-4 w-4 mr-2" />
-            Entrar
-          </Button>
+          
+          {isAuthenticated ? (
+            <>
+              <NavLink 
+                to="/dashboard" 
+                className={({ isActive }) => cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActive ? "text-primary" : "text-foreground/60"
+                )}
+              >
+                Dashboard
+              </NavLink>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => navigate('/cadastro')}>
+                Cadastre-se
+              </Button>
+              <Button onClick={() => navigate('/login')}>
+                <User className="h-4 w-4 mr-2" />
+                Entrar
+              </Button>
+            </>
+          )}
         </nav>
         
         {/* Mobile Menu Button */}
@@ -100,14 +128,37 @@ const NavBar = () => {
             >
               ONGs
             </NavLink>
+            
             <div className="flex flex-col gap-2 pt-2 border-t">
-              <Button variant="outline" onClick={() => { navigate('/cadastro'); setIsOpen(false); }}>
-                Cadastre-se
-              </Button>
-              <Button onClick={() => { navigate('/login'); setIsOpen(false); }}>
-                <User className="h-4 w-4 mr-2" />
-                Entrar
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <NavLink 
+                    to="/dashboard" 
+                    className={({ isActive }) => cn(
+                      "flex items-center text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
+                      isActive ? "bg-primary-50 text-primary" : "text-foreground/60"
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </NavLink>
+                  <Button variant="outline" onClick={() => { handleLogout(); setIsOpen(false); }}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => { navigate('/cadastro'); setIsOpen(false); }}>
+                    Cadastre-se
+                  </Button>
+                  <Button onClick={() => { navigate('/login'); setIsOpen(false); }}>
+                    <User className="h-4 w-4 mr-2" />
+                    Entrar
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         </div>

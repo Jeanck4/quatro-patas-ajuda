@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,10 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
   
   const [tutorData, setTutorData] = useState({
     email: '',
@@ -38,40 +41,64 @@ const Login = () => {
     }));
   };
   
-  const handleTutorSubmit = (e: React.FormEvent) => {
+  const handleTutorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Aqui seria feita a validação e integração com o banco de dados
-    console.log('Login de Tutor:', tutorData);
-    
-    // Simular login bem-sucedido
-    toast({
-      title: "Login realizado!",
-      description: "Bem-vindo de volta ao Quatro Patas.",
-    });
-    
-    // Redirecionar para a página inicial do tutor (dashboard)
-    setTimeout(() => {
-      navigate('/ongs');
-    }, 1500);
+    try {
+      const success = await login(tutorData.email, tutorData.senha, 'tutor');
+      
+      if (success) {
+        toast({
+          title: "Login realizado!",
+          description: "Bem-vindo de volta ao Quatro Patas.",
+        });
+        
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Falha no login",
+          description: "Email ou senha incorretos.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro durante login:', error);
+      toast({
+        title: "Erro no login",
+        description: "Ocorreu um erro ao processar sua solicitação.",
+        variant: "destructive"
+      });
+    }
   };
   
-  const handleOngSubmit = (e: React.FormEvent) => {
+  const handleOngSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Aqui seria feita a validação e integração com o banco de dados
-    console.log('Login de ONG:', ongData);
-    
-    // Simular login bem-sucedido
-    toast({
-      title: "Login realizado!",
-      description: "Bem-vindo de volta ao Quatro Patas.",
-    });
-    
-    // Redirecionar para a página inicial da ONG (dashboard)
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1500);
+    try {
+      const success = await login(ongData.email, ongData.senha, 'ong');
+      
+      if (success) {
+        toast({
+          title: "Login realizado!",
+          description: "Bem-vindo de volta ao Quatro Patas.",
+        });
+        
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Falha no login",
+          description: "Email ou senha incorretos.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro durante login:', error);
+      toast({
+        title: "Erro no login",
+        description: "Ocorreu um erro ao processar sua solicitação.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -128,8 +155,18 @@ const Login = () => {
                   </CardContent>
                   
                   <CardFooter className="flex flex-col space-y-4">
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary-600">
-                      Entrar como Tutor
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary-600"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center">
+                          <span className="animate-spin mr-2">⏳</span> Processando...
+                        </span>
+                      ) : (
+                        "Entrar como Tutor"
+                      )}
                     </Button>
                     <div className="text-center text-sm">
                       <span className="text-gray-500">Não tem uma conta? </span>
@@ -177,8 +214,18 @@ const Login = () => {
                   </CardContent>
                   
                   <CardFooter className="flex flex-col space-y-4">
-                    <Button type="submit" className="w-full bg-primary hover:bg-primary-600">
-                      Entrar como ONG
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary-600"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center">
+                          <span className="animate-spin mr-2">⏳</span> Processando...
+                        </span>
+                      ) : (
+                        "Entrar como ONG"
+                      )}
                     </Button>
                     <div className="text-center text-sm">
                       <span className="text-gray-500">Não tem uma conta? </span>
