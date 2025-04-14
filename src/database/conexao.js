@@ -2,7 +2,8 @@
 /**
  * Conexão com o banco de dados PostgreSQL
  */
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 
 // Configuração para conexão com o PostgreSQL
 const pool = new Pool({
@@ -164,6 +165,7 @@ const mockStorage = {
   pets: [],
   ongs: []
 };
+
 
 export const getMockStorage = () => {
   return mockStorage;
