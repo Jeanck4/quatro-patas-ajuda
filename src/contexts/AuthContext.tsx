@@ -48,8 +48,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         resultado = await api.loginOng(email, senha);
       }
       
-      if (resultado.sucesso && resultado.dados) {
-        const userData = type === 'tutor' ? resultado.dados.tutor : resultado.dados.ong;
+      if (resultado.sucesso && (resultado.tutor || resultado.ong)) {
+        const userData = type === 'tutor' ? resultado.tutor : resultado.ong;
         
         setCurrentUser(userData);
         setUserType(type);

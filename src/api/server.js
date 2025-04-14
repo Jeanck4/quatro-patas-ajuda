@@ -1,8 +1,6 @@
-
 import express from 'express';
 import cors from 'cors';
-import { inserirTutor, inserirPet, inserirOng, testarConexao, 
-         loginTutor, loginOng, buscarPetsTutor, buscarOngs } from '../database/conexao.js';
+import { inserirTutor, inserirPet, inserirOng, testarConexao} from '../database/conexao.js';
 
 const app = express();
 const PORT = 3001;
@@ -67,68 +65,50 @@ app.post('/api/ongs', async (req, res) => {
   }
 });
 
-// Rota para login de tutor
+import { query } from '../database/conexao.js'; // já está exportado lá
+
+// Rota de login para tutor
 app.post('/api/login/tutor', async (req, res) => {
+  const { email, senha } = req.body;
+
   try {
-    const { email, senha } = req.body;
-    const resultado = await loginTutor(email, senha);
-    if (resultado.sucesso) {
-      res.json({ sucesso: true, dados: resultado.dados });
-    } else {
-      res.status(401).json({ sucesso: false, erro: resultado.erro });
+    const result = await query(
+      'SELECT tutor_id, nome FROM tutores WHERE email = $1 AND senha = $2',
+      [email, senha]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ erro: 'Email ou senha inválidos' });
     }
-  } catch (err) {
-    console.error('Erro no backend:', err);
-    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
+
+    res.status(200).json({ sucesso: true, tutor: result.rows[0] });
+  } catch (error) {
+    console.error('Erro no login de tutor:', error);
+    res.status(500).json({ erro: 'Erro interno no servidor' });
   }
 });
 
-// Rota para login de ONG
+// Rota de login para ONG
 app.post('/api/login/ong', async (req, res) => {
+  const { email, senha } = req.body;
+
   try {
-    const { email, senha } = req.body;
-    const resultado = await loginOng(email, senha);
-    if (resultado.sucesso) {
-      res.json({ sucesso: true, dados: resultado.dados });
-    } else {
-      res.status(401).json({ sucesso: false, erro: resultado.erro });
+    const result = await query(
+      'SELECT ong_id, nome FROM ongs WHERE email = $1 AND senha = $2',
+      [email, senha]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ erro: 'Email ou senha inválidos' });
     }
-  } catch (err) {
-    console.error('Erro no backend:', err);
-    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
+
+    res.status(200).json({ sucesso: true, ong: result.rows[0] });
+  } catch (error) {
+    console.error('Erro no login de ONG:', error);
+    res.status(500).json({ erro: 'Erro interno no servidor' });
   }
 });
 
-// Rota para buscar pets de um tutor
-app.get('/api/tutores/:tutorId/pets', async (req, res) => {
-  try {
-    const { tutorId } = req.params;
-    const resultado = await buscarPetsTutor(tutorId);
-    if (resultado.sucesso) {
-      res.json({ sucesso: true, dados: resultado.dados });
-    } else {
-      res.status(404).json({ sucesso: false, erro: resultado.erro });
-    }
-  } catch (err) {
-    console.error('Erro no backend:', err);
-    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
-  }
-});
-
-// Rota para listar todas as ONGs
-app.get('/api/ongs', async (req, res) => {
-  try {
-    const resultado = await buscarOngs();
-    if (resultado.sucesso) {
-      res.json({ sucesso: true, dados: resultado.dados });
-    } else {
-      res.status(404).json({ sucesso: false, erro: resultado.erro });
-    }
-  } catch (err) {
-    console.error('Erro no backend:', err);
-    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
-  }
-});
 
 app.listen(PORT, () => {
   console.log(`✅ Servidor Express rodando em http://localhost:${PORT}`);
