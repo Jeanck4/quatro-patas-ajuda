@@ -1,9 +1,7 @@
+
 /**
  * PostgreSQL database connection module
- * With browser fallback using localStorage
  */
-
-const isBrowser = typeof window !== 'undefined';
 
 import pg from 'pg';
 const { Pool } = pg;
@@ -16,16 +14,10 @@ const poolConfig = {
   port: 5432,
 };
 
-const pool = !isBrowser ? new Pool(poolConfig) : null;
+const pool = new Pool(poolConfig);
 
 // Função para testar conexão com o banco de dados
 export const testarConexao = async () => {
-  if (isBrowser) {
-    console.warn('Usando mock de conexão em ambiente de navegador');
-    const agora = new Date().toISOString();
-    return { sucesso: true, dados: { agora } };
-  }
-
   try {
     const client = await pool.connect();
     const result = await client.query('SELECT NOW() as agora');
@@ -44,32 +36,8 @@ export const testarConexao = async () => {
 
 // Função para inserir um tutor
 export const inserirTutor = async (tutor) => {
-  if (isBrowser) {
-    console.warn('Usando mock de inserção de tutor em ambiente de navegador');
-    const tutores = JSON.parse(localStorage.getItem('tutores') || '[]');
-    const tutorId = Date.now().toString();
-
-    const novoTutor = {
-      tutor_id: tutorId,
-      nome: tutor.nome,
-      email: tutor.email,
-      senha: tutor.senha,
-      telefone: tutor.telefone,
-      cpf: tutor.cpf,
-      endereco: tutor.endereco,
-      cidade: tutor.cidade,
-      estado: tutor.estado,
-      cep: tutor.cep
-    };
-
-    tutores.push(novoTutor);
-    localStorage.setItem('tutores', JSON.stringify(tutores));
-
-    console.log('Tutor cadastrado com sucesso (mock)! ID:', tutorId);
-    return { sucesso: true, id: tutorId };
-  }
-
   try {
+    console.log('Inserindo tutor no PostgreSQL:', tutor);
     const client = await pool.connect();
 
     const result = await client.query(
@@ -92,30 +60,8 @@ export const inserirTutor = async (tutor) => {
 
 // Função para inserir um pet
 export const inserirPet = async (pet, tutorId) => {
-  if (isBrowser) {
-    console.warn('Usando mock de inserção de pet em ambiente de navegador');
-    const pets = JSON.parse(localStorage.getItem('pets') || '[]');
-    const petId = Date.now().toString();
-
-    const novoPet = {
-      pet_id: petId,
-      tutor_id: tutorId,
-      nome: pet.nome,
-      especie: pet.especie,
-      raca: pet.raca,
-      idade: pet.idade,
-      sexo: pet.sexo,
-      peso: pet.peso
-    };
-
-    pets.push(novoPet);
-    localStorage.setItem('pets', JSON.stringify(pets));
-
-    console.log('Pet cadastrado com sucesso (mock)! ID:', petId);
-    return { sucesso: true, id: petId };
-  }
-
   try {
+    console.log('Inserindo pet no PostgreSQL:', pet);
     const client = await pool.connect();
 
     const result = await client.query(
@@ -138,33 +84,8 @@ export const inserirPet = async (pet, tutorId) => {
 
 // Função para inserir uma ONG
 export const inserirOng = async (ong) => {
-  if (isBrowser) {
-    console.warn('Usando mock de inserção de ONG em ambiente de navegador');
-    const ongs = JSON.parse(localStorage.getItem('ongs') || '[]');
-    const ongId = Date.now().toString();
-
-    const novaOng = {
-      ong_id: ongId,
-      nome: ong.nome,
-      email: ong.email,
-      senha: ong.senha,
-      telefone: ong.telefone,
-      cnpj: ong.cnpj,
-      endereco: ong.endereco,
-      cidade: ong.cidade,
-      estado: ong.estado,
-      cep: ong.cep,
-      descricao: ong.descricao
-    };
-
-    ongs.push(novaOng);
-    localStorage.setItem('ongs', JSON.stringify(ongs));
-
-    console.log('ONG cadastrada com sucesso (mock)! ID:', ongId);
-    return { sucesso: true, id: ongId };
-  }
-
   try {
+    console.log('Inserindo ONG no PostgreSQL:', ong);
     const client = await pool.connect();
 
     const result = await client.query(
@@ -187,13 +108,8 @@ export const inserirOng = async (ong) => {
 
 // Função genérica para executar queries
 export const query = async (text, params) => {
-  if (isBrowser) {
-    console.warn('Usando mock de query em ambiente de navegador');
-    console.log('Mock query executed with:', { text, params });
-    return { rows: [] };
-  }
-
   try {
+    console.log('Executando query no PostgreSQL:', text, params);
     const client = await pool.connect();
     const result = await client.query(text, params);
     client.release();
@@ -202,29 +118,4 @@ export const query = async (text, params) => {
     console.error('Error executing query:', error);
     throw error;
   }
-};
-
-// Initialize localStorage if in browser environment
-if (isBrowser) {
-  if (!localStorage.getItem('tutores')) {
-    localStorage.setItem('tutores', JSON.stringify([]));
-  }
-  if (!localStorage.getItem('pets')) {
-    localStorage.setItem('pets', JSON.stringify([]));
-  }
-  if (!localStorage.getItem('ongs')) {
-    localStorage.setItem('ongs', JSON.stringify([]));
-  }
-}
-
-// Exporta mockStorage opcional
-export const getMockStorage = () => {
-  if (isBrowser) {
-    return {
-      tutores: JSON.parse(localStorage.getItem('tutores') || '[]'),
-      pets: JSON.parse(localStorage.getItem('pets') || '[]'),
-      ongs: JSON.parse(localStorage.getItem('ongs') || '[]')
-    };
-  }
-  return null;
 };
