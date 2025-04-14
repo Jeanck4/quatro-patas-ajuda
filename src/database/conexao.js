@@ -1,185 +1,156 @@
+
 /**
- * PostgreSQL database connection
+ * Mock PostgreSQL database connection for browser environment
+ * 
+ * This file provides a browser-compatible version that mimics PostgreSQL functionality
+ * by using localStorage for storage instead of an actual database connection.
  */
 
-import { Pool } from 'pg';
+// Mock database implementation for browser environment
+const mockDb = {
+  tutores: [],
+  pets: [],
+  ongs: []
+};
 
-// Database connection configuration
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'quatro_patas',
-  password: 'admin',
-  port: 5432,
-});
-
-// Function to test connection
+// Function to test connection - always returns success in mock mode
 export const testarConexao = async () => {
   try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    const agora = result.rows[0].now;
+    const agora = new Date().toISOString();
     
-    console.log('Conexão com banco de dados iniciada com sucesso!');
-    console.log('Hora atual do banco:', agora);
+    console.log('Mock database connection initialized successfully!');
+    console.log('Current time:', agora);
     
-    client.release();
     return { sucesso: true, dados: { agora } };
   } catch (error) {
-    console.error('Erro ao conectar ao banco de dados:', error);
+    console.error('Error connecting to mock database:', error);
     return { sucesso: false, erro: error.message };
   }
 };
 
-// Function to insert a tutor in the actual database
-export const inserirTutor = async (tutor) => {
-  const client = await pool.connect();
-  
+// Helper function to load data from localStorage
+const loadData = () => {
   try {
-    await client.query('BEGIN');
+    const tutores = JSON.parse(localStorage.getItem('tutores') || '[]');
+    const pets = JSON.parse(localStorage.getItem('pets') || '[]');
+    const ongs = JSON.parse(localStorage.getItem('ongs') || '[]');
+    return { tutores, pets, ongs };
+  } catch (error) {
+    console.error('Error loading data from localStorage:', error);
+    return { tutores: [], pets: [], ongs: [] };
+  }
+};
+
+// Helper function to save data to localStorage
+const saveData = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error(`Error saving ${key} to localStorage:`, error);
+  }
+};
+
+// Function to insert a tutor
+export const inserirTutor = async (tutor) => {
+  try {
+    const { tutores } = loadData();
+    const tutorId = Date.now().toString();
     
-    const query = `
-      INSERT INTO tutores 
-      (nome, email, senha, telefone, cpf, endereco, cidade, estado, cep)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING tutor_id
-    `;
+    const novoTutor = {
+      tutor_id: tutorId,
+      nome: tutor.nome,
+      email: tutor.email,
+      senha: tutor.senha,
+      telefone: tutor.telefone,
+      cpf: tutor.cpf,
+      endereco: tutor.endereco,
+      cidade: tutor.cidade,
+      estado: tutor.estado,
+      cep: tutor.cep
+    };
     
-    const values = [
-      tutor.nome,
-      tutor.email,
-      tutor.senha,
-      tutor.telefone,
-      tutor.cpf,
-      tutor.endereco,
-      tutor.cidade,
-      tutor.estado,
-      tutor.cep
-    ];
+    tutores.push(novoTutor);
+    saveData('tutores', tutores);
     
-    const result = await client.query(query, values);
-    await client.query('COMMIT');
-    
-    const tutorId = result.rows[0].tutor_id;
     console.log('Tutor cadastrado com sucesso! ID:', tutorId);
-    
     return { sucesso: true, id: tutorId };
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Erro ao cadastrar tutor:', error);
     return { sucesso: false, erro: error.message };
-  } finally {
-    client.release();
   }
 };
 
-// Function to insert a pet in the actual database
+// Function to insert a pet
 export const inserirPet = async (pet, tutorId) => {
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
+    const { pets } = loadData();
+    const petId = Date.now().toString();
     
-    const query = `
-      INSERT INTO pets 
-      (tutor_id, nome, especie, raca, idade, sexo, peso)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING pet_id
-    `;
+    const novoPet = {
+      pet_id: petId,
+      tutor_id: tutorId,
+      nome: pet.nome,
+      especie: pet.especie,
+      raca: pet.raca,
+      idade: pet.idade,
+      sexo: pet.sexo,
+      peso: pet.peso
+    };
     
-    const values = [
-      tutorId,
-      pet.nome,
-      pet.especie,
-      pet.raca,
-      pet.idade,
-      pet.sexo,
-      pet.peso
-    ];
+    pets.push(novoPet);
+    saveData('pets', pets);
     
-    const result = await client.query(query, values);
-    await client.query('COMMIT');
-    
-    const petId = result.rows[0].pet_id;
     console.log('Pet cadastrado com sucesso! ID:', petId);
-    
     return { sucesso: true, id: petId };
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Erro ao cadastrar pet:', error);
     return { sucesso: false, erro: error.message };
-  } finally {
-    client.release();
   }
 };
 
-// Function to insert an ONG in the actual database
+// Function to insert an ONG
 export const inserirOng = async (ong) => {
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
+    const { ongs } = loadData();
+    const ongId = Date.now().toString();
     
-    const query = `
-      INSERT INTO ongs 
-      (nome, email, senha, telefone, cnpj, endereco, cidade, estado, cep, descricao)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING ong_id
-    `;
+    const novaOng = {
+      ong_id: ongId,
+      nome: ong.nome,
+      email: ong.email,
+      senha: ong.senha,
+      telefone: ong.telefone,
+      cnpj: ong.cnpj,
+      endereco: ong.endereco,
+      cidade: ong.cidade,
+      estado: ong.estado,
+      cep: ong.cep,
+      descricao: ong.descricao
+    };
     
-    const values = [
-      ong.nome,
-      ong.email,
-      ong.senha,
-      ong.telefone,
-      ong.cnpj,
-      ong.endereco,
-      ong.cidade,
-      ong.estado,
-      ong.cep,
-      ong.descricao
-    ];
+    ongs.push(novaOng);
+    saveData('ongs', ongs);
     
-    const result = await client.query(query, values);
-    await client.query('COMMIT');
-    
-    const ongId = result.rows[0].ong_id;
     console.log('ONG cadastrada com sucesso! ID:', ongId);
-    
     return { sucesso: true, id: ongId };
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Erro ao cadastrar ONG:', error);
     return { sucesso: false, erro: error.message };
-  } finally {
-    client.release();
   }
 };
 
-// Function to query the database
+// Function to query the database - provides a compatible API with the real version
 export const query = async (text, params) => {
   try {
-    const client = await pool.connect();
-    const result = await client.query(text, params);
-    client.release();
-    return result;
+    console.log('Mock query executed with:', { text, params });
+    return { rows: [] };
   } catch (error) {
-    console.error('Erro na consulta:', error);
+    console.error('Error in mock query:', error);
     throw error;
   }
 };
 
-// For browser compatibility, we'll keep a mock storage function
-// This will be used as fallback if the database connection fails
-export const getMockStorage = () => {
-  return {
-    tutores: JSON.parse(localStorage.getItem('tutores') || '[]'),
-    pets: JSON.parse(localStorage.getItem('pets') || '[]'),
-    ongs: JSON.parse(localStorage.getItem('ongs') || '[]')
-  };
-};
-
-// Initialize localStorage as backup
+// Initialize localStorage if not present
 const initializeStorage = () => {
   if (!localStorage.getItem('tutores')) {
     localStorage.setItem('tutores', JSON.stringify([]));
@@ -192,4 +163,10 @@ const initializeStorage = () => {
   }
 };
 
+// Initialize storage on module load
 initializeStorage();
+
+// For convenience, export a function to get the current mock storage state
+export const getMockStorage = () => {
+  return loadData();
+};
