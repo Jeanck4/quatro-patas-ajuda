@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Check, Plus, AlertTriangle, Server } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
-import * as db from '@/database/conexao.js';
+import * as api from '@/services/api';
 
 interface Pet {
   id: string;
@@ -38,20 +37,20 @@ const CadastroPet = () => {
   const [pets, setPets] = useState<Pet[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [ambiente, setAmbiente] = useState<'browser' | 'servidor' | ''>('');
+  const [serverConectado, setServerConectado] = useState(false);
   
   useEffect(() => {
-    const verificarAmbiente = async () => {
+    const verificarConexao = async () => {
       try {
-        const resultado = await db.testarConexao();
-        setAmbiente(resultado.ambiente || 'browser');
+        const resultado = await api.testarConexao();
+        setServerConectado(resultado.sucesso);
       } catch (error) {
-        console.error('Erro ao verificar ambiente:', error);
-        setAmbiente('browser');
+        console.error('Erro ao verificar conexão:', error);
+        setServerConectado(false);
       }
     };
     
-    verificarAmbiente();
+    verificarConexao();
   }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,15 +104,14 @@ const CadastroPet = () => {
       try {
         const tutorId = localStorage.getItem('tutorId') || '1';
         
-        const resultado = await db.inserirPet(formData, tutorId);
-        setAmbiente(resultado.ambiente || 'browser');
+        const resultado = await api.inserirPet(formData, tutorId);
         
         if (resultado.sucesso) {
-          setPets(prev => [...prev, { ...formData, id: resultado.id }]);
+          setPets(prev => [...prev, { ...formData, id: resultado.id || formData.id }]);
           
           toast({
             title: "Pet adicionado!",
-            description: `${formData.nome} foi adicionado ${resultado.ambiente === 'servidor' ? 'ao PostgreSQL' : 'localmente'}. ID: ${resultado.id}`,
+            description: `${formData.nome} foi adicionado com sucesso. ID: ${resultado.id}`,
           });
           
           setFormData({
@@ -171,26 +169,26 @@ const CadastroPet = () => {
     <MainLayout>
       <div className="container py-10">
         <div className="max-w-3xl mx-auto">
-          {ambiente === 'browser' && (
+          {!serverConectado && (
             <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded flex items-center">
               <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
               <div>
-                <h3 className="font-bold text-yellow-700">Atenção: Modo Navegador</h3>
+                <h3 className="font-bold text-yellow-700">Atenção: Servidor indisponível</h3>
                 <p className="text-sm text-yellow-700">
-                  Você está rodando o aplicativo apenas no navegador. Os dados serão salvos temporariamente 
-                  no localStorage e não no banco PostgreSQL. Para usar o PostgreSQL, execute o app em um servidor Node.js.
+                  Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 
+                  e tente novamente. Execute: <code>node src/api/server.js</code> no terminal.
                 </p>
               </div>
             </div>
           )}
           
-          {ambiente === 'servidor' && (
+          {serverConectado && (
             <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
               <Server className="h-5 w-5 text-green-600 mr-2" />
               <div>
-                <h3 className="font-bold text-green-700">Conectado ao PostgreSQL</h3>
+                <h3 className="font-bold text-green-700">Conectado ao servidor</h3>
                 <p className="text-sm text-green-700">
-                  Seu app está conectado ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
+                  Seu app está conectado ao servidor backend e ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
                 </p>
               </div>
             </div>

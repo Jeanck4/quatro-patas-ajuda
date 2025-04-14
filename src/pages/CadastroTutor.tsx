@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, AlertTriangle, Server, Database } from 'lucide-react';
+import { Check, AlertTriangle, Server } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/hooks/use-toast';
-import * as db from '@/database/conexao.js';
+import * as api from '@/services/api';
 
 const CadastroTutor = () => {
   const navigate = useNavigate();
@@ -29,20 +28,20 @@ const CadastroTutor = () => {
   
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [ambiente, setAmbiente] = useState<'browser' | 'servidor' | ''>('');
+  const [serverConectado, setServerConectado] = useState(false);
   const [conexaoTestada, setConexaoTestada] = useState(false);
   
   // Teste automaticamente a conexão ao carregar o componente
   useEffect(() => {
     const verificarConexao = async () => {
       try {
-        const resultado = await db.testarConexao();
-        setAmbiente(resultado.ambiente || 'browser');
+        const resultado = await api.testarConexao();
+        setServerConectado(resultado.sucesso);
         setConexaoTestada(true);
         console.log("Resultado da verificação de conexão:", resultado);
       } catch (error) {
         console.error("Erro ao verificar conexão:", error);
-        setAmbiente('browser');
+        setServerConectado(false);
         setConexaoTestada(true);
       }
     };
@@ -100,15 +99,15 @@ const CadastroTutor = () => {
     setLoading(true);
     try {
       console.log("Testando conexão com o banco de dados...");
-      const resultado = await db.testarConexao();
+      const resultado = await api.testarConexao();
       
-      setAmbiente(resultado.ambiente || 'browser');
+      setServerConectado(resultado.sucesso);
       setConexaoTestada(true);
       
       if (resultado.sucesso) {
         toast({
           title: "Conexão com o banco bem-sucedida!",
-          description: `Servidor respondeu em: ${resultado.dados.agora} (Ambiente: ${resultado.ambiente})`,
+          description: `Servidor respondeu em: ${resultado.dados?.agora}`,
         });
         console.log("Conexão bem-sucedida:", resultado);
       } else {
@@ -121,10 +120,10 @@ const CadastroTutor = () => {
       }
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
-      setAmbiente('browser');
+      setServerConectado(false);
       toast({
         title: "Erro no teste de conexão",
-        description: "Verifique o console para mais detalhes",
+        description: "Verifique se o servidor está rodando e tente novamente",
         variant: "destructive"
       });
     } finally {
@@ -139,19 +138,17 @@ const CadastroTutor = () => {
       setLoading(true);
       try {
         console.log('Dados do tutor sendo enviados para o banco:', formData);
-        console.log('Ambiente atual:', ambiente);
         
-        const resultado = await db.inserirTutor(formData);
-        setAmbiente(resultado.ambiente);
+        const resultado = await api.inserirTutor(formData);
         
         console.log('Resultado da inserção:', resultado);
         
         if (resultado.sucesso) {
-          localStorage.setItem('tutorId', resultado.id);
+          localStorage.setItem('tutorId', resultado.id || '');
           
           toast({
             title: "Cadastro realizado!",
-            description: `Seus dados foram salvos ${resultado.ambiente === 'servidor' ? 'no PostgreSQL' : 'localmente'}. ID: ${resultado.id}`,
+            description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
           });
           
           setTimeout(() => {
@@ -181,26 +178,26 @@ const CadastroTutor = () => {
     <MainLayout>
       <div className="container py-10">
         <div className="max-w-3xl mx-auto">
-          {ambiente === 'browser' && conexaoTestada && (
+          {!serverConectado && conexaoTestada && (
             <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded flex items-center">
               <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
               <div>
-                <h3 className="font-bold text-yellow-700">Atenção: Modo Navegador</h3>
+                <h3 className="font-bold text-yellow-700">Atenção: Servidor indisponível</h3>
                 <p className="text-sm text-yellow-700">
-                  Você está rodando o aplicativo apenas no navegador. Os dados serão salvos temporariamente 
-                  no localStorage e não no banco PostgreSQL. Para usar o PostgreSQL, execute o app em um servidor Node.js.
+                  Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 
+                  e tente novamente. Execute: <code>node src/api/server.js</code> no terminal.
                 </p>
               </div>
             </div>
           )}
           
-          {ambiente === 'servidor' && (
+          {serverConectado && (
             <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
               <Server className="h-5 w-5 text-green-600 mr-2" />
               <div>
-                <h3 className="font-bold text-green-700">Conectado ao PostgreSQL</h3>
+                <h3 className="font-bold text-green-700">Conectado ao servidor</h3>
                 <p className="text-sm text-green-700">
-                  Seu app está conectado ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
+                  Seu app está conectado ao servidor backend e ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
                 </p>
               </div>
             </div>
@@ -208,11 +205,11 @@ const CadastroTutor = () => {
 
           {!conexaoTestada && (
             <div className="mb-4 p-4 bg-blue-100 border border-blue-400 rounded flex items-center">
-              <Database className="h-5 w-5 text-blue-600 mr-2" />
+              <Server className="h-5 w-5 text-blue-600 mr-2" />
               <div>
                 <h3 className="font-bold text-blue-700">Verificando Conexão</h3>
                 <p className="text-sm text-blue-700">
-                  Verificando o tipo de conexão disponível...
+                  Verificando conexão com o servidor backend...
                 </p>
               </div>
             </div>
