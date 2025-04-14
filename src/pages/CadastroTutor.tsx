@@ -1,11 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, AlertTriangle, Server } from 'lucide-react';
+import { Check, AlertTriangle, Server, Database } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/hooks/use-toast';
 import * as db from '@/database/conexao.js';
@@ -30,6 +30,25 @@ const CadastroTutor = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [ambiente, setAmbiente] = useState<'browser' | 'servidor' | ''>('');
+  const [conexaoTestada, setConexaoTestada] = useState(false);
+  
+  // Teste automaticamente a conexão ao carregar o componente
+  useEffect(() => {
+    const verificarConexao = async () => {
+      try {
+        const resultado = await db.testarConexao();
+        setAmbiente(resultado.ambiente || 'browser');
+        setConexaoTestada(true);
+        console.log("Resultado da verificação de conexão:", resultado);
+      } catch (error) {
+        console.error("Erro ao verificar conexão:", error);
+        setAmbiente('browser');
+        setConexaoTestada(true);
+      }
+    };
+    
+    verificarConexao();
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -78,30 +97,38 @@ const CadastroTutor = () => {
   };
   
   const testarConexaoBanco = async () => {
+    setLoading(true);
     try {
+      console.log("Testando conexão com o banco de dados...");
       const resultado = await db.testarConexao();
       
       setAmbiente(resultado.ambiente || 'browser');
+      setConexaoTestada(true);
       
       if (resultado.sucesso) {
         toast({
           title: "Conexão com o banco bem-sucedida!",
-          description: `Servidor respondeu em: ${resultado.dados.agora} (Ambiente: ${resultado.ambiente || 'browser'})`,
+          description: `Servidor respondeu em: ${resultado.dados.agora} (Ambiente: ${resultado.ambiente})`,
         });
+        console.log("Conexão bem-sucedida:", resultado);
       } else {
         toast({
           title: "Falha na conexão!",
           description: resultado.erro,
           variant: "destructive"
         });
+        console.error("Falha na conexão:", resultado.erro);
       }
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
+      setAmbiente('browser');
       toast({
         title: "Erro no teste de conexão",
         description: "Verifique o console para mais detalhes",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -112,9 +139,12 @@ const CadastroTutor = () => {
       setLoading(true);
       try {
         console.log('Dados do tutor sendo enviados para o banco:', formData);
+        console.log('Ambiente atual:', ambiente);
         
         const resultado = await db.inserirTutor(formData);
-        setAmbiente(resultado.ambiente || 'browser');
+        setAmbiente(resultado.ambiente);
+        
+        console.log('Resultado da inserção:', resultado);
         
         if (resultado.sucesso) {
           localStorage.setItem('tutorId', resultado.id);
@@ -151,7 +181,7 @@ const CadastroTutor = () => {
     <MainLayout>
       <div className="container py-10">
         <div className="max-w-3xl mx-auto">
-          {ambiente === 'browser' && (
+          {ambiente === 'browser' && conexaoTestada && (
             <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded flex items-center">
               <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
               <div>
@@ -171,6 +201,18 @@ const CadastroTutor = () => {
                 <h3 className="font-bold text-green-700">Conectado ao PostgreSQL</h3>
                 <p className="text-sm text-green-700">
                   Seu app está conectado ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!conexaoTestada && (
+            <div className="mb-4 p-4 bg-blue-100 border border-blue-400 rounded flex items-center">
+              <Database className="h-5 w-5 text-blue-600 mr-2" />
+              <div>
+                <h3 className="font-bold text-blue-700">Verificando Conexão</h3>
+                <p className="text-sm text-blue-700">
+                  Verificando o tipo de conexão disponível...
                 </p>
               </div>
             </div>
@@ -345,6 +387,7 @@ const CadastroTutor = () => {
                     type="button" 
                     variant="secondary" 
                     onClick={testarConexaoBanco}
+                    disabled={loading}
                   >
                     Testar Conexão
                   </Button>

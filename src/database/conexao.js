@@ -5,7 +5,7 @@
  */
 
 // Browser detection - check if we're in a browser environment
-const isBrowser = typeof window !== 'undefined';
+const isBrowser = typeof window !== 'undefined' && typeof process === 'undefined';
 
 // Only import pg in Node.js environment
 let Pool;
@@ -13,6 +13,7 @@ if (!isBrowser) {
   try {
     const pg = require('pg');
     Pool = pg.Pool;
+    console.log("PostgreSQL module loaded successfully");
   } catch (error) {
     console.error('Failed to import pg module:', error);
   }
@@ -28,7 +29,11 @@ const poolConfig = !isBrowser ? {
 } : null;
 
 // Pool instance - only created in Node.js environment
-const pool = !isBrowser && Pool ? new Pool(poolConfig) : null;
+let pool;
+if (!isBrowser && Pool) {
+  pool = new Pool(poolConfig);
+  console.log("PostgreSQL pool created with config:", poolConfig);
+}
 
 // Função para testar conexão com o banco de dados
 export const testarConexao = async () => {
@@ -39,12 +44,13 @@ export const testarConexao = async () => {
   }
 
   try {
+    console.log("Attempting to connect to PostgreSQL...");
     const client = await pool.connect();
     const result = await client.query('SELECT NOW() as agora');
     const agora = result.rows[0].agora;
     
     console.log('Database connection initialized successfully!');
-    console.log('Current time:', agora);
+    console.log('Current time from database:', agora);
     
     client.release();
     return { sucesso: true, dados: { agora }, ambiente: 'servidor' };
@@ -56,6 +62,8 @@ export const testarConexao = async () => {
 
 // Função para inserir um tutor
 export const inserirTutor = async (tutor) => {
+  console.log("Ambiente de execução:", isBrowser ? "browser" : "servidor");
+  
   if (isBrowser) {
     console.warn('AVISO: Executando em ambiente de navegador - os dados não serão salvos no PostgreSQL');
     console.warn('Use esta aplicação em um ambiente de servidor para salvar no banco PostgreSQL');
@@ -85,6 +93,7 @@ export const inserirTutor = async (tutor) => {
   }
 
   try {
+    console.log("Tentando inserir tutor no PostgreSQL:", tutor);
     const client = await pool.connect();
     
     const result = await client.query(
@@ -107,6 +116,8 @@ export const inserirTutor = async (tutor) => {
 
 // Função para inserir um pet
 export const inserirPet = async (pet, tutorId) => {
+  console.log("Ambiente de execução para inserir pet:", isBrowser ? "browser" : "servidor");
+  
   if (isBrowser) {
     console.warn('AVISO: Executando em ambiente de navegador - os dados não serão salvos no PostgreSQL');
     console.warn('Use esta aplicação em um ambiente de servidor para salvar no banco PostgreSQL');
@@ -134,6 +145,7 @@ export const inserirPet = async (pet, tutorId) => {
   }
 
   try {
+    console.log("Tentando inserir pet no PostgreSQL:", pet, "para tutor ID:", tutorId);
     const client = await pool.connect();
     
     const result = await client.query(
@@ -156,6 +168,8 @@ export const inserirPet = async (pet, tutorId) => {
 
 // Função para inserir uma ONG
 export const inserirOng = async (ong) => {
+  console.log("Ambiente de execução para inserir ONG:", isBrowser ? "browser" : "servidor");
+  
   if (isBrowser) {
     console.warn('AVISO: Executando em ambiente de navegador - os dados não serão salvos no PostgreSQL');
     console.warn('Use esta aplicação em um ambiente de servidor para salvar no banco PostgreSQL');
@@ -186,6 +200,7 @@ export const inserirOng = async (ong) => {
   }
 
   try {
+    console.log("Tentando inserir ONG no PostgreSQL:", ong);
     const client = await pool.connect();
     
     const result = await client.query(
@@ -216,6 +231,7 @@ export const query = async (text, params) => {
   }
 
   try {
+    console.log("Executando query no PostgreSQL:", text, params);
     const client = await pool.connect();
     const result = await client.query(text, params);
     client.release();
