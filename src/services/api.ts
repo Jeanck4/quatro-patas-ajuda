@@ -81,6 +81,30 @@ export const inserirPet = async (pet: any, tutorId: string): Promise<ApiResponse
 };
 
 /**
+ * Insere uma organização no banco de dados
+ */
+export const inserirOrganizacao = async (organizacao: any): Promise<ApiResponse<never>> => {
+  try {
+    const response = await fetch(`${API_URL}/organizacoes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(organizacao),
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao inserir organização:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao salvar dados da organização' 
+    };
+  }
+};
+
+/**
  * Insere uma ONG no banco de dados
  */
 export const inserirOng = async (ong: any): Promise<ApiResponse<never>> => {
@@ -129,11 +153,11 @@ export const loginTutor = async (email: string, senha: string): Promise<ApiRespo
 };
 
 /**
- * Realiza login de ONGs
+ * Realiza login de organizações
  */
-export const loginOng = async (email: string, senha: string): Promise<ApiResponse<{ong: any}>> => {
+export const loginOrganizacao = async (email: string, senha: string): Promise<ApiResponse<{organizacao: any}>> => {
   try {
-    const response = await fetch(`${API_URL}/login/ong`, {
+    const response = await fetch(`${API_URL}/login/organizacao`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -144,7 +168,7 @@ export const loginOng = async (email: string, senha: string): Promise<ApiRespons
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Erro ao fazer login como ONG:', error);
+    console.error('Erro ao fazer login como organização:', error);
     return { 
       sucesso: false, 
       erro: error instanceof Error ? error.message : 'Erro ao fazer login' 
@@ -268,6 +292,34 @@ export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
     return { 
       sucesso: false, 
       erro: error instanceof Error ? error.message : 'Erro ao buscar ONGs' 
+    };
+  }
+};
+
+/**
+ * Busca as ONGs de uma organização específica
+ */
+export const buscarOngsOrganizacao = async (organizacaoId: string): Promise<ApiResponse<{ongs: any[]}>> => {
+  try {
+    console.log(`Buscando ONGs da organização ${organizacaoId}...`);
+    const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/ongs`);
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    const data = await response.json();
+    console.log(`ONGs da organização ${organizacaoId} encontradas:`, data);
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar ONGs da organização:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao buscar ONGs da organização' 
     };
   }
 };

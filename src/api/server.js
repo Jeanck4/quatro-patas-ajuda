@@ -1,6 +1,7 @@
+
 import express from 'express';
 import cors from 'cors';
-import { inserirTutor, inserirPet, inserirOng, testarConexao} from '../database/conexao.js';
+import { inserirTutor, inserirPet, inserirOng, inserirOrganizacao, testarConexao, query } from '../database/conexao.js';
 
 const app = express();
 const PORT = 3001;
@@ -50,6 +51,21 @@ app.post('/api/pets', async (req, res) => {
   }
 });
 
+// Rota para cadastrar organização
+app.post('/api/organizacoes', async (req, res) => {
+  try {
+    const resultado = await inserirOrganizacao(req.body);
+    if (resultado.sucesso) {
+      res.status(201).json({ sucesso: true, id: resultado.id });
+    } else {
+      res.status(400).json({ sucesso: false, erro: resultado.erro });
+    }
+  } catch (err) {
+    console.error('Erro no backend:', err);
+    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
+  }
+});
+
 // Rota para cadastrar ONG
 app.post('/api/ongs', async (req, res) => {
   try {
@@ -64,8 +80,6 @@ app.post('/api/ongs', async (req, res) => {
     res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
   }
 });
-
-import { query } from '../database/conexao.js';
 
 // Rota de login para tutor
 app.post('/api/login/tutor', async (req, res) => {
@@ -88,13 +102,13 @@ app.post('/api/login/tutor', async (req, res) => {
   }
 });
 
-// Rota de login para ONG
-app.post('/api/login/ong', async (req, res) => {
+// Rota de login para organização
+app.post('/api/login/organizacao', async (req, res) => {
   const { email, senha } = req.body;
 
   try {
     const result = await query(
-      'SELECT ong_id, nome FROM ongs WHERE email = $1 AND senha = $2',
+      'SELECT organizacao_id, nome FROM organizacoes WHERE email = $1 AND senha = $2',
       [email, senha]
     );
 
@@ -102,9 +116,9 @@ app.post('/api/login/ong', async (req, res) => {
       return res.status(401).json({ erro: 'Email ou senha inválidos' });
     }
 
-    res.status(200).json({ sucesso: true, ong: result.rows[0] });
+    res.status(200).json({ sucesso: true, organizacao: result.rows[0] });
   } catch (error) {
-    console.error('Erro no login de ONG:', error);
+    console.error('Erro no login de organização:', error);
     res.status(500).json({ erro: 'Erro interno no servidor' });
   }
 });
@@ -173,13 +187,28 @@ app.delete('/api/pets/:petId', async (req, res) => {
 app.get('/api/ongs', async (req, res) => {
   try {
     const result = await query(
-      'SELECT ong_id, nome, email, telefone, endereco, cidade, estado, cep, descricao FROM ongs',
+      'SELECT o.ong_id, o.nome, o.email, o.telefone, o.endereco, o.cidade, o.estado, o.cep, o.descricao, o.data_disponivel, o.hora_inicio, o.hora_fim, o.vagas_disponiveis, org.nome as organizacao_nome FROM ongs o JOIN organizacoes org ON o.organizacao_id = org.organizacao_id',
       []
     );
     res.json({ sucesso: true, dados: { ongs: result.rows } });
   } catch (error) {
     console.error('Erro ao buscar ONGs:', error);
     res.status(500).json({ sucesso: false, erro: 'Erro ao buscar ONGs' });
+  }
+});
+
+// Rota para buscar ONGs de uma organização
+app.get('/api/organizacoes/:organizacaoId/ongs', async (req, res) => {
+  try {
+    const { organizacaoId } = req.params;
+    const result = await query(
+      'SELECT * FROM ongs WHERE organizacao_id = $1',
+      [organizacaoId]
+    );
+    res.json({ sucesso: true, dados: { ongs: result.rows } });
+  } catch (error) {
+    console.error('Erro ao buscar ONGs da organização:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar ONGs da organização' });
   }
 });
 

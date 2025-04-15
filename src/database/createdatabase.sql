@@ -1,7 +1,7 @@
 
--- Tabela para armazenar informações das ONGs
-CREATE TABLE ongs (
-    ong_id SERIAL PRIMARY KEY,
+-- Tabela para armazenar informações das organizações
+CREATE TABLE organizacoes (
+    organizacao_id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL, -- Deve ser armazenada com hash na aplicação real
@@ -12,6 +12,25 @@ CREATE TABLE ongs (
     estado VARCHAR(2) NOT NULL,
     cep VARCHAR(10) NOT NULL,
     descricao TEXT,
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela para armazenar informações das ONGs (agora vinculadas às organizações)
+CREATE TABLE ongs (
+    ong_id SERIAL PRIMARY KEY,
+    organizacao_id INTEGER REFERENCES organizacoes(organizacao_id) ON DELETE CASCADE,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    endereco TEXT NOT NULL,
+    cidade VARCHAR(100) NOT NULL,
+    estado VARCHAR(2) NOT NULL,
+    cep VARCHAR(10) NOT NULL,
+    descricao TEXT,
+    data_disponivel DATE,
+    hora_inicio TIME,
+    hora_fim TIME,
+    vagas_disponiveis INTEGER,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -76,3 +95,4 @@ CREATE INDEX idx_agendamentos_campanha_id ON agendamentos(campanha_id);
 CREATE INDEX idx_agendamentos_pet_id ON agendamentos(pet_id);
 CREATE INDEX idx_agendamentos_tutor_id ON agendamentos(tutor_id);
 CREATE INDEX idx_agendamentos_status ON agendamentos(status);
+CREATE INDEX idx_ongs_organizacao_id ON ongs(organizacao_id);

@@ -4,10 +4,10 @@ import * as api from '../services/api';
 
 interface AuthContextType {
   currentUser: any | null;
-  userType: 'tutor' | 'ong' | null;
+  userType: 'tutor' | 'organizacao' | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, senha: string, type: 'tutor' | 'ong') => Promise<boolean>;
+  login: (email: string, senha: string, type: 'tutor' | 'organizacao') => Promise<boolean>;
   logout: () => void;
 }
 
@@ -15,14 +15,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [userType, setUserType] = useState<'tutor' | 'ong' | null>(null);
+  const [userType, setUserType] = useState<'tutor' | 'organizacao' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   // Verificar se o usuário está autenticado ao carregar a página
   useEffect(() => {
     const checkAuth = () => {
       const savedUser = localStorage.getItem('currentUser');
-      const savedUserType = localStorage.getItem('userType') as 'tutor' | 'ong' | null;
+      const savedUserType = localStorage.getItem('userType') as 'tutor' | 'organizacao' | null;
       
       if (savedUser && savedUserType) {
         setCurrentUser(JSON.parse(savedUser));
@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   }, []);
   
   // Função para fazer login
-  const login = async (email: string, senha: string, type: 'tutor' | 'ong'): Promise<boolean> => {
+  const login = async (email: string, senha: string, type: 'tutor' | 'organizacao'): Promise<boolean> => {
     setIsLoading(true);
     
     try {
@@ -45,17 +45,23 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       if (type === 'tutor') {
         resultado = await api.loginTutor(email, senha);
       } else {
-        resultado = await api.loginOng(email, senha);
+        resultado = await api.loginOrganizacao(email, senha);
       }
       
-      if (resultado.sucesso && (resultado.tutor || resultado.ong)) {
-        const userData = type === 'tutor' ? resultado.tutor : resultado.ong;
+      if (resultado.sucesso && (resultado.tutor || resultado.organizacao)) {
+        const userData = type === 'tutor' ? resultado.tutor : resultado.organizacao;
         
         setCurrentUser(userData);
         setUserType(type);
         
         localStorage.setItem('currentUser', JSON.stringify(userData));
         localStorage.setItem('userType', type);
+        
+        if (type === 'tutor') {
+          localStorage.setItem('tutorId', userData.tutor_id);
+        } else {
+          localStorage.setItem('organizacaoId', userData.organizacao_id);
+        }
         
         return true;
       }
@@ -76,7 +82,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     localStorage.removeItem('currentUser');
     localStorage.removeItem('userType');
     localStorage.removeItem('tutorId');
-    localStorage.removeItem('ongId');
+    localStorage.removeItem('organizacaoId');
   };
   
   const value = {

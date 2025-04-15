@@ -20,7 +20,7 @@ const Login = () => {
     senha: ''
   });
   
-  const [ongData, setOngData] = useState({
+  const [organizacaoData, setOrganizacaoData] = useState({
     email: '',
     senha: ''
   });
@@ -33,9 +33,9 @@ const Login = () => {
     }));
   };
   
-  const handleOngChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOrganizacaoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setOngData(prev => ({
+    setOrganizacaoData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -71,11 +71,11 @@ const Login = () => {
     }
   };
   
-  const handleOngSubmit = async (e: React.FormEvent) => {
+  const handleOrganizacaoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const success = await login(ongData.email, ongData.senha, 'ong');
+      const success = await login(organizacaoData.email, organizacaoData.senha, 'organizacao');
       
       if (success) {
         toast({
@@ -116,7 +116,7 @@ const Login = () => {
             <Tabs defaultValue="tutor" className="w-full">
               <TabsList className="grid grid-cols-2 mb-4 mx-6">
                 <TabsTrigger value="tutor">Sou Tutor</TabsTrigger>
-                <TabsTrigger value="ong">Sou ONG</TabsTrigger>
+                <TabsTrigger value="organizacao">Sou Organização</TabsTrigger>
               </TabsList>
               
               <TabsContent value="tutor">
@@ -178,36 +178,36 @@ const Login = () => {
                 </form>
               </TabsContent>
               
-              <TabsContent value="ong">
-                <form onSubmit={handleOngSubmit}>
+              <TabsContent value="organizacao">
+                <form onSubmit={handleOrganizacaoSubmit}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="ong-email">Email</Label>
+                      <Label htmlFor="organizacao-email">Email</Label>
                       <Input
-                        id="ong-email"
+                        id="organizacao-email"
                         name="email"
                         type="email"
-                        placeholder="ong@exemplo.com"
-                        value={ongData.email}
-                        onChange={handleOngChange}
+                        placeholder="organizacao@exemplo.com"
+                        value={organizacaoData.email}
+                        onChange={handleOrganizacaoChange}
                         required
                       />
                     </div>
                     
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="ong-senha">Senha</Label>
+                        <Label htmlFor="organizacao-senha">Senha</Label>
                         <Button type="button" variant="link" className="p-0 h-auto text-sm">
                           Esqueceu a senha?
                         </Button>
                       </div>
                       <Input
-                        id="ong-senha"
+                        id="organizacao-senha"
                         name="senha"
                         type="password"
                         placeholder="******"
-                        value={ongData.senha}
-                        onChange={handleOngChange}
+                        value={organizacaoData.senha}
+                        onChange={handleOrganizacaoChange}
                         required
                       />
                     </div>
@@ -224,12 +224,12 @@ const Login = () => {
                           <span className="animate-spin mr-2">⏳</span> Processando...
                         </span>
                       ) : (
-                        "Entrar como ONG"
+                        "Entrar como Organização"
                       )}
                     </Button>
                     <div className="text-center text-sm">
                       <span className="text-gray-500">Não tem uma conta? </span>
-                      <Button type="button" variant="link" className="p-0 h-auto" onClick={() => navigate('/cadastro/ong')}>
+                      <Button type="button" variant="link" className="p-0 h-auto" onClick={() => navigate('/cadastro/organizacao')}>
                         Cadastre-se
                       </Button>
                     </div>

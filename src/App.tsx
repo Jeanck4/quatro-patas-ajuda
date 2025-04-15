@@ -9,7 +9,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Cadastro from "./pages/Cadastro";
 import CadastroTutor from "./pages/CadastroTutor";
-import CadastroOng from "./pages/CadastroOng";
+import CadastroOrganizacao from "./pages/CadastroOrganizacao";
+import CadastroOngOrganizacao from "./pages/CadastroOngOrganizacao";
 import CadastroPet from "./pages/CadastroPet";
 import ListaONGs from "./pages/ListaONGs";
 import Login from "./pages/Login";
@@ -28,7 +29,8 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/cadastro/tutor" element={<CadastroTutor />} />
-              <Route path="/cadastro/ong" element={<CadastroOng />} />
+              <Route path="/cadastro/organizacao" element={<CadastroOrganizacao />} />
+              <Route path="/cadastro/ong" element={<CadastroOngOrganizacao />} />
               <Route path="/cadastro/pet" element={<CadastroPet />} />
               <Route path="/ongs" element={<ListaONGs />} />
               <Route path="/login" element={<Login />} />

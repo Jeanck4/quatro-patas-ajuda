@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Heart, MapPin, Phone } from 'lucide-react';
+import { Calendar, Heart, MapPin, Phone, Clock } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
 import * as api from '@/services/api';
@@ -68,16 +69,24 @@ const ListaONGs = () => {
     setOngsFiltradas(resultado);
   };
   
+  const formatarData = (dataString) => {
+    if (!dataString) return '';
+    const data = new Date(dataString);
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(data);
+  };
+  
   const handleAgendarCastracao = (ongId: string, data: string) => {
-    // Aqui será implementada a integração com o banco de dados
+    // Implementação futura para agendar castração
     console.log('Agendando castração para ONG:', ongId, 'Data:', data);
     
     toast({
       title: "Castração agendada!",
       description: `Seu agendamento para ${data} foi realizado com sucesso.`,
     });
-    
-    // Em uma aplicação real, redirecionaria para um formulário de escolha dos pets a serem castrados
   };
   
   return (
@@ -163,10 +172,41 @@ const ListaONGs = () => {
                   <CardContent className="pt-4">
                     <div className="flex flex-col md:flex-row gap-4">
                       <div className="md:w-2/3">
-                        <p className="flex items-center gap-2 mb-2 text-sm text-gray-600">
-                          <Phone className="h-4 w-4" /> {ong.telefone}
-                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                          <p className="flex items-center gap-2 text-sm text-gray-600">
+                            <Phone className="h-4 w-4" /> {ong.telefone}
+                          </p>
+                          <p className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="h-4 w-4" /> Disponível em: {formatarData(ong.data_disponivel)}
+                          </p>
+                          {ong.hora_inicio && ong.hora_fim && (
+                            <p className="flex items-center gap-2 text-sm text-gray-600">
+                              <Clock className="h-4 w-4" /> Horário: {ong.hora_inicio} às {ong.hora_fim}
+                            </p>
+                          )}
+                        </div>
+                        <div className="mb-2">
+                          <span className="text-sm font-medium">Organização:</span> {ong.organizacao_nome}
+                        </div>
                         <p className="mb-4">{ong.descricao}</p>
+                        {ong.vagas_disponiveis > 0 && (
+                          <div className="bg-green-50 p-2 rounded-md inline-block">
+                            <p className="text-sm text-green-700">
+                              {ong.vagas_disponiveis} vagas disponíveis para castração
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="md:w-1/3 flex flex-col gap-2">
+                        {ong.data_disponivel && ong.vagas_disponiveis > 0 && (
+                          <Button 
+                            onClick={() => handleAgendarCastracao(ong.ong_id, formatarData(ong.data_disponivel))}
+                            className="w-full"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" /> Agendar Castração
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
