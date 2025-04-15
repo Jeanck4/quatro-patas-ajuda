@@ -1,3 +1,4 @@
+
 /**
  * API service for making requests to our backend server
  */
@@ -5,7 +6,7 @@
 const API_URL = 'http://localhost:3001/api';
 
 // Interface para as respostas da API
-interface ApiResponse<T> {
+interface ApiResponse<T = any> {
   sucesso: boolean;
   id?: string;
   erro?: string;
@@ -156,8 +157,19 @@ export const loginOng = async (email: string, senha: string): Promise<ApiRespons
  */
 export const buscarPetsTutor = async (tutorId: string): Promise<ApiResponse<{pets: any[]}>> => {
   try {
+    console.log(`Fetching pets for tutor ${tutorId} from ${API_URL}/tutores/${tutorId}/pets`);
     const response = await fetch(`${API_URL}/tutores/${tutorId}/pets`);
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
     const data = await response.json();
+    console.log("API response data:", data);
     return data;
   } catch (error) {
     console.error('Erro ao buscar pets:', error);
@@ -173,6 +185,7 @@ export const buscarPetsTutor = async (tutorId: string): Promise<ApiResponse<{pet
  */
 export const atualizarPet = async (petId: string, pet: any): Promise<ApiResponse<any>> => {
   try {
+    console.log(`Updating pet ${petId} with data:`, pet);
     const response = await fetch(`${API_URL}/pets/${petId}`, {
       method: 'PUT',
       headers: {
@@ -180,7 +193,17 @@ export const atualizarPet = async (petId: string, pet: any): Promise<ApiResponse
       },
       body: JSON.stringify(pet),
     });
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
     const data = await response.json();
+    console.log("API update response:", data);
     return data;
   } catch (error) {
     console.error('Erro ao atualizar pet:', error);
@@ -196,10 +219,21 @@ export const atualizarPet = async (petId: string, pet: any): Promise<ApiResponse
  */
 export const removerPet = async (petId: string): Promise<ApiResponse<any>> => {
   try {
+    console.log(`Removing pet ${petId}`);
     const response = await fetch(`${API_URL}/pets/${petId}`, {
       method: 'DELETE',
     });
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
     const data = await response.json();
+    console.log("API delete response:", data);
     return data;
   } catch (error) {
     console.error('Erro ao remover pet:', error);
@@ -227,43 +261,7 @@ export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
   }
 };
 
-// Fetch pets for a tutor
-export const getPets = async (tutorId) => {
-  try {
-    const response = await fetch(`/api/tutores/${tutorId}/pets`);
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching pets:', error);
-    throw error;
-  }
-};
-
-// Update a pet
-export const updatePet = async (petId, petData) => {
-  try {
-    const response = await fetch(`/api/pets/${petId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(petData),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error updating pet:', error);
-    throw error;
-  }
-};
-
-// Remove a pet
-export const removePet = async (petId) => {
-  try {
-    const response = await fetch(`/api/pets/${petId}`, {
-      method: 'DELETE',
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error removing pet:', error);
-    throw error;
-  }
-};
+// The following functions are deprecated and should be replaced with the ones above
+export const getPets = buscarPetsTutor;
+export const updatePet = atualizarPet;
+export const removePet = removerPet;

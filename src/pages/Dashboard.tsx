@@ -12,7 +12,7 @@ import * as api from '@/services/api';
 import { Dog, Building, ListPlus, Settings, Calendar, LogOut, Trash, Pencil } from 'lucide-react';
 
 const Dashboard = () => {
-  const { currentUser: user, userType, isAuthenticated } = useAuth();
+  const { currentUser, userType, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<any[]>([]);
   const [loading, setPetsLoading] = useState(true);
@@ -20,18 +20,30 @@ const Dashboard = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && userType === 'tutor' && user?.id) {
-      loadPets();
+    if (isAuthenticated && userType === 'tutor' && currentUser?.tutor_id) {
+      loadPets(currentUser.tutor_id);
     }
-  }, [isAuthenticated, userType, user]);
+  }, [isAuthenticated, userType, currentUser]);
 
-  const loadPets = async () => {
+  const loadPets = async (tutorId: string) => {
     try {
       setPetsLoading(true);
-      // Calling the API function that we'll implement
-      const response = await api.getPets(user.id);
+      console.log("Fetching pets for tutor ID:", tutorId);
+      
+      // Using buscarPetsTutor instead of getPets to match the existing function name in api.ts
+      const response = await api.buscarPetsTutor(tutorId);
+      
+      console.log("API response for pets:", response);
+      
       if (response.sucesso) {
-        setPets(response.dados.pets);
+        setPets(response.dados.pets || []);
+      } else {
+        console.error("Failed to load pets:", response.erro);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível carregar seus pets: ' + (response.erro || 'Erro desconhecido'),
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Erro ao carregar pets:', error);
@@ -50,8 +62,10 @@ const Dashboard = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handlePetUpdated = () => {
-    loadPets();
+  const handlePetUpdated = (updatedPet: any) => {
+    if (currentUser?.tutor_id) {
+      loadPets(currentUser.tutor_id);
+    }
     setIsEditDialogOpen(false);
     toast({
       title: 'Sucesso',
@@ -61,14 +75,16 @@ const Dashboard = () => {
 
   const handleDeletePet = async (petId: string) => {
     try {
-      // Calling the API function that we'll implement
-      const response = await api.removePet(petId);
+      // Using removerPet instead of removePet to match the function in api.ts
+      const response = await api.removerPet(petId);
       if (response.sucesso) {
         toast({
           title: 'Sucesso',
           description: 'Pet removido com sucesso!',
         });
-        loadPets();
+        if (currentUser?.tutor_id) {
+          loadPets(currentUser.tutor_id);
+        }
       } else {
         toast({
           title: 'Erro',
@@ -99,8 +115,8 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">
               {userType === 'tutor' 
-                ? `Bem-vindo(a), ${user?.nome || ''}!`
-                : `ONG: ${user?.nome || ''}`}
+                ? `Bem-vindo(a), ${currentUser?.nome || ''}!`
+                : `ONG: ${currentUser?.nome || ''}`}
             </p>
           </div>
           
@@ -258,7 +274,7 @@ const Dashboard = () => {
       </div>
       
       {/* Edit Pet Dialog */}
-      {editingPet && (
+      {editingPet && isEditDialogOpen && (
         <EditPetDialog
           pet={editingPet}
           onPetUpdated={handlePetUpdated}

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,15 @@ interface EditPetDialogProps {
 }
 
 export function EditPetDialog({ pet, onPetUpdated }: EditPetDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState(pet);
+  const [isOpen, setIsOpen] = useState(true);
+  const [formData, setFormData] = useState<Pet>(pet);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Update form data when pet prop changes
+    setFormData(pet);
+  }, [pet]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -49,8 +54,11 @@ export function EditPetDialog({ pet, onPetUpdated }: EditPetDialogProps) {
     setLoading(true);
     
     try {
-      // Update this to match the API function name we'll implement
-      const resultado = await api.updatePet(pet.pet_id, formData);
+      console.log("Updating pet with ID:", pet.pet_id, "Data:", formData);
+      // Using atualizarPet to match the API function name in services/api.ts
+      const resultado = await api.atualizarPet(pet.pet_id, formData);
+      
+      console.log("Update pet result:", resultado);
       
       if (resultado.sucesso) {
         toast({
@@ -67,6 +75,7 @@ export function EditPetDialog({ pet, onPetUpdated }: EditPetDialogProps) {
         });
       }
     } catch (error) {
+      console.error("Error updating pet:", error);
       toast({
         title: "Erro ao atualizar",
         description: "Ocorreu um erro ao atualizar o pet",
