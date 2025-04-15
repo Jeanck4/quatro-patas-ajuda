@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import * as api from '@/services/api';
 
@@ -50,7 +49,8 @@ export function EditPetDialog({ pet, onPetUpdated }: EditPetDialogProps) {
     setLoading(true);
     
     try {
-      const resultado = await api.atualizarPet(pet.pet_id, formData);
+      // Update this to match the API function name we'll implement
+      const resultado = await api.updatePet(pet.pet_id, formData);
       
       if (resultado.sucesso) {
         toast({
@@ -79,11 +79,6 @@ export function EditPetDialog({ pet, onPetUpdated }: EditPetDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8">
-          <Pencil className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Pet</DialogTitle>
@@ -161,8 +156,8 @@ export function EditPetDialog({ pet, onPetUpdated }: EditPetDialogProps) {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Macho">Macho</SelectItem>
-                <SelectItem value="Fêmea">Fêmea</SelectItem>
+                <SelectItem value="M">Macho</SelectItem>
+                <SelectItem value="F">Fêmea</SelectItem>
               </SelectContent>
             </Select>
           </div>

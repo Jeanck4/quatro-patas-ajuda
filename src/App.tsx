@@ -15,31 +15,34 @@ import ListaONGs from "./pages/ListaONGs";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/cadastro/tutor" element={<CadastroTutor />} />
-            <Route path="/cadastro/ong" element={<CadastroOng />} />
-            <Route path="/cadastro/pet" element={<CadastroPet />} />
-            <Route path="/ongs" element={<ListaONGs />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/cadastro" element={<Cadastro />} />
+              <Route path="/cadastro/tutor" element={<CadastroTutor />} />
+              <Route path="/cadastro/ong" element={<CadastroOng />} />
+              <Route path="/cadastro/pet" element={<CadastroPet />} />
+              <Route path="/ongs" element={<ListaONGs />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

@@ -226,3 +226,44 @@ export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
     };
   }
 };
+
+// Fetch pets for a tutor
+export const getPets = async (tutorId) => {
+  try {
+    const response = await fetch(`/api/tutores/${tutorId}/pets`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching pets:', error);
+    throw error;
+  }
+};
+
+// Update a pet
+export const updatePet = async (petId, petData) => {
+  try {
+    const response = await fetch(`/api/pets/${petId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(petData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating pet:', error);
+    throw error;
+  }
+};
+
+// Remove a pet
+export const removePet = async (petId) => {
+  try {
+    const response = await fetch(`/api/pets/${petId}`, {
+      method: 'DELETE',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error removing pet:', error);
+    throw error;
+  }
+};

@@ -12,11 +12,11 @@ import * as api from '@/services/api';
 import { Dog, Building, ListPlus, Settings, Calendar, LogOut, Trash, Pencil } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, userType, isAuthenticated } = useAuth();
+  const { currentUser: user, userType, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [pets, setPets] = useState([]);
+  const [pets, setPets] = useState<any[]>([]);
   const [loading, setPetsLoading] = useState(true);
-  const [editingPet, setEditingPet] = useState(null);
+  const [editingPet, setEditingPet] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -28,7 +28,8 @@ const Dashboard = () => {
   const loadPets = async () => {
     try {
       setPetsLoading(true);
-      const response = await api.getPetsByTutor(user.id);
+      // Calling the API function that we'll implement
+      const response = await api.getPets(user.id);
       if (response.sucesso) {
         setPets(response.dados.pets);
       }
@@ -44,7 +45,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleEditPet = (pet) => {
+  const handleEditPet = (pet: any) => {
     setEditingPet(pet);
     setIsEditDialogOpen(true);
   };
@@ -58,9 +59,10 @@ const Dashboard = () => {
     });
   };
 
-  const handleDeletePet = async (petId) => {
+  const handleDeletePet = async (petId: string) => {
     try {
-      const response = await api.deletePet(petId);
+      // Calling the API function that we'll implement
+      const response = await api.removePet(petId);
       if (response.sucesso) {
         toast({
           title: 'Sucesso',
@@ -259,9 +261,7 @@ const Dashboard = () => {
       {editingPet && (
         <EditPetDialog
           pet={editingPet}
-          open={isEditDialogOpen}
-          onClose={() => setIsEditDialogOpen(false)}
-          onSuccess={handlePetUpdated}
+          onPetUpdated={handlePetUpdated}
         />
       )}
     </MainLayout>
