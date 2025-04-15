@@ -174,15 +174,6 @@ const ListaONGs = () => {
               ))
             )}
           </div>
-          
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500 mb-4">
-              Não encontrou uma ONG parceira na sua região?
-            </p>
-            <Button variant="outline" onClick={() => navigate('/cadastro/ong')}>
-              Cadastre sua ONG na plataforma
-            </Button>
-          </div>
         </div>
       </div>
     </MainLayout>
