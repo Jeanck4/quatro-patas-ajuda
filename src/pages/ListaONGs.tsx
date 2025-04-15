@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,62 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Heart, MapPin, Phone } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
-
-// Dados de exemplo das ONGs
-const ongsData = [
-  {
-    id: '1',
-    nome: 'Amor Animal',
-    endereco: 'Rua das Flores, 123 - Centro',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    telefone: '(11) 98765-4321',
-    descricao: 'ONG dedicada à castração e bem-estar animal',
-    proximasCampanhas: [
-      { data: '25/05/2023', vagas: 15 },
-      { data: '10/06/2023', vagas: 20 }
-    ]
-  },
-  {
-    id: '2',
-    nome: 'Proteção Pet',
-    endereco: 'Av. Principal, 456 - Jardim',
-    cidade: 'Rio de Janeiro',
-    estado: 'RJ',
-    telefone: '(21) 91234-5678',
-    descricao: 'Ajudamos pets abandonados e promovemos castrações mensais',
-    proximasCampanhas: [
-      { data: '15/05/2023', vagas: 10 },
-      { data: '20/05/2023', vagas: 12 }
-    ]
-  },
-  {
-    id: '3',
-    nome: 'Amigos de Patas',
-    endereco: 'Rua Secundária, 789 - Vila Nova',
-    cidade: 'Belo Horizonte',
-    estado: 'MG',
-    telefone: '(31) 97654-3210',
-    descricao: 'Focamos em castrações e adoções responsáveis',
-    proximasCampanhas: [
-      { data: '30/05/2023', vagas: 8 },
-      { data: '12/06/2023', vagas: 25 }
-    ]
-  },
-  {
-    id: '4',
-    nome: 'Quatro Patas Felizes',
-    endereco: 'Av. das Árvores, 234 - Parque',
-    cidade: 'Curitiba',
-    estado: 'PR',
-    telefone: '(41) 94567-8901',
-    descricao: 'Trabalhamos com resgate, reabilitação e castração de animais de rua',
-    proximasCampanhas: [
-      { data: '18/05/2023', vagas: 15 },
-      { data: '01/06/2023', vagas: 18 }
-    ]
-  }
-];
+import * as api from '@/services/api';
 
 const ListaONGs = () => {
   const navigate = useNavigate();
@@ -75,14 +19,47 @@ const ListaONGs = () => {
     cidade: '',
   });
   
-  const [ongsFiltradas, setOngsFiltradas] = useState(ongsData);
+  const [ongs, setOngs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [ongsFiltradas, setOngsFiltradas] = useState([]);
+  
+  useEffect(() => {
+    carregarOngs();
+  }, []);
+
+  const carregarOngs = async () => {
+    try {
+      setLoading(true);
+      const response = await api.buscarOngs();
+      
+      if (response.sucesso && response.dados) {
+        setOngs(response.dados.ongs);
+        setOngsFiltradas(response.dados.ongs);
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar as ONGs",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar ONGs:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar as ONGs",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleFiltroChange = (valor: string, campo: string) => {
     const novoFiltro = { ...filtro, [campo]: valor };
     setFiltro(novoFiltro);
     
     // Aplicar filtro
-    const resultado = ongsData.filter(ong => {
+    const resultado = ongs.filter(ong => {
       const estadoMatch = novoFiltro.estado === 'todos' || ong.estado.toLowerCase() === novoFiltro.estado.toLowerCase();
       const cidadeMatch = !novoFiltro.cidade || ong.cidade.toLowerCase().includes(novoFiltro.cidade.toLowerCase());
       return estadoMatch && cidadeMatch;
@@ -155,14 +132,18 @@ const ListaONGs = () => {
           
           {/* Lista de ONGs */}
           <div className="space-y-6">
-            {ongsFiltradas.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-lg text-gray-500">Carregando ONGs...</p>
+              </div>
+            ) : ongsFiltradas.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
                 <p className="text-lg text-gray-500">Nenhuma ONG encontrada com os filtros selecionados.</p>
                 <Button 
                   variant="link" 
                   onClick={() => {
                     setFiltro({ estado: 'todos', cidade: '' });
-                    setOngsFiltradas(ongsData);
+                    setOngsFiltradas(ongs);
                   }}
                 >
                   Limpar filtros
@@ -170,7 +151,7 @@ const ListaONGs = () => {
               </div>
             ) : (
               ongsFiltradas.map((ong) => (
-                <Card key={ong.id} className="border overflow-hidden">
+                <Card key={ong.ong_id} className="border overflow-hidden">
                   <CardHeader className="bg-primary-50 pb-2">
                     <CardTitle className="text-xl text-primary">{ong.nome}</CardTitle>
                     <CardDescription className="flex items-center gap-1">
@@ -186,30 +167,6 @@ const ListaONGs = () => {
                           <Phone className="h-4 w-4" /> {ong.telefone}
                         </p>
                         <p className="mb-4">{ong.descricao}</p>
-                      </div>
-                      
-                      <div className="md:w-1/3 space-y-3">
-                        <h4 className="font-medium flex items-center gap-2">
-                          <Calendar className="h-4 w-4" /> Próximas Campanhas
-                        </h4>
-                        
-                        <div className="space-y-2">
-                          {ong.proximasCampanhas.map((campanha, idx) => (
-                            <div key={idx} className="bg-secondary-50 p-3 rounded-md">
-                              <p className="text-sm font-medium mb-1">Data: {campanha.data}</p>
-                              <div className="flex justify-between items-center">
-                                <p className="text-xs text-gray-500">{campanha.vagas} vagas disponíveis</p>
-                                <Button
-                                  size="sm"
-                                  className="bg-primary hover:bg-primary-600"
-                                  onClick={() => handleAgendarCastracao(ong.id, campanha.data)}
-                                >
-                                  <Heart className="h-3 w-3 mr-1" /> Agendar
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
                       </div>
                     </div>
                   </CardContent>

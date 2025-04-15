@@ -169,6 +169,20 @@ app.delete('/api/pets/:petId', async (req, res) => {
   }
 });
 
+// Rota para buscar todas as ONGs
+app.get('/api/ongs', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT ong_id, nome, email, telefone, endereco, cidade, estado, cep, descricao FROM ongs',
+      []
+    );
+    res.json({ sucesso: true, dados: { ongs: result.rows } });
+  } catch (error) {
+    console.error('Erro ao buscar ONGs:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar ONGs' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Servidor Express rodando em http://localhost:${PORT}`);
 });

@@ -249,8 +249,19 @@ export const removerPet = async (petId: string): Promise<ApiResponse<any>> => {
  */
 export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
   try {
+    console.log('Buscando ONGs do banco de dados...');
     const response = await fetch(`${API_URL}/ongs`);
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
     const data = await response.json();
+    console.log('ONGs encontradas:', data);
     return data;
   } catch (error) {
     console.error('Erro ao buscar ONGs:', error);
