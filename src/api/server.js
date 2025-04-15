@@ -65,7 +65,7 @@ app.post('/api/ongs', async (req, res) => {
   }
 });
 
-import { query } from '../database/conexao.js'; // já está exportado lá
+import { query } from '../database/conexao.js';
 
 // Rota de login para tutor
 app.post('/api/login/tutor', async (req, res) => {
@@ -109,6 +109,65 @@ app.post('/api/login/ong', async (req, res) => {
   }
 });
 
+// Rota para buscar pets de um tutor
+app.get('/api/tutores/:tutorId/pets', async (req, res) => {
+  try {
+    const { tutorId } = req.params;
+    const result = await query(
+      'SELECT * FROM pets WHERE tutor_id = $1',
+      [tutorId]
+    );
+    res.json({ sucesso: true, dados: { pets: result.rows } });
+  } catch (error) {
+    console.error('Erro ao buscar pets:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar pets' });
+  }
+});
+
+// Rota para atualizar pet
+app.put('/api/pets/:petId', async (req, res) => {
+  try {
+    const { petId } = req.params;
+    const { nome, especie, raca, idade, sexo, peso } = req.body;
+    
+    const result = await query(
+      `UPDATE pets 
+       SET nome = $1, especie = $2, raca = $3, idade = $4, sexo = $5, peso = $6
+       WHERE pet_id = $7 RETURNING *`,
+      [nome, especie, raca, idade, sexo, peso, petId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ sucesso: false, erro: 'Pet não encontrado' });
+    }
+    
+    res.json({ sucesso: true, dados: result.rows[0] });
+  } catch (error) {
+    console.error('Erro ao atualizar pet:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao atualizar pet' });
+  }
+});
+
+// Rota para deletar pet
+app.delete('/api/pets/:petId', async (req, res) => {
+  try {
+    const { petId } = req.params;
+    
+    const result = await query(
+      'DELETE FROM pets WHERE pet_id = $1 RETURNING *',
+      [petId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ sucesso: false, erro: 'Pet não encontrado' });
+    }
+    
+    res.json({ sucesso: true, mensagem: 'Pet removido com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar pet:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao deletar pet' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Servidor Express rodando em http://localhost:${PORT}`);

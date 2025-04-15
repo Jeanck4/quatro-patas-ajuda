@@ -1,4 +1,3 @@
-
 /**
  * API service for making requests to our backend server
  */
@@ -165,6 +164,48 @@ export const buscarPetsTutor = async (tutorId: string): Promise<ApiResponse<{pet
     return { 
       sucesso: false, 
       erro: error instanceof Error ? error.message : 'Erro ao buscar pets' 
+    };
+  }
+};
+
+/**
+ * Atualiza um pet
+ */
+export const atualizarPet = async (petId: string, pet: any): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetch(`${API_URL}/pets/${petId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(pet),
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao atualizar pet:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao atualizar pet' 
+    };
+  }
+};
+
+/**
+ * Remove um pet
+ */
+export const removerPet = async (petId: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetch(`${API_URL}/pets/${petId}`, {
+      method: 'DELETE',
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao remover pet:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao remover pet' 
     };
   }
 };
