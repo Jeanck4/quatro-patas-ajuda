@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import { 
@@ -120,10 +121,19 @@ app.get('/api/mutiroes', async (req, res) => {
 app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
   try {
     const { organizacaoId } = req.params;
+    
+    // Modificando para buscar mutirões através das ONGs vinculadas à organização
     const result = await query(
-      'SELECT * FROM mutiroes WHERE organizacao_id = $1',
+      `SELECT m.*, 
+              o.nome as nome_ong, 
+              org.nome as nome_organizacao
+       FROM mutiroes m
+       JOIN ongs o ON m.ong_id = o.ong_id
+       JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
+       WHERE org.organizacao_id = $1`,
       [organizacaoId]
     );
+    
     res.json({ sucesso: true, dados: { mutiroes: result.rows } });
   } catch (error) {
     console.error('Erro ao buscar mutirões da organização:', error);

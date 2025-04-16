@@ -6,40 +6,42 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/layouts/MainLayout';
 import * as api from '@/services/api';
-import { MapPin, Calendar, Users } from 'lucide-react';
+import { MapPin, Calendar, Users, RefreshCw } from 'lucide-react';
 
 const MutiroesDisponiveis = () => {
   const [mutiroes, setMutiroes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const carregarMutiroes = async () => {
-      try {
-        setLoading(true);
-        const response = await api.buscarMutiroes();
-        
-        if (response.sucesso) {
-          setMutiroes(response.dados.mutiroes || []);
-        } else {
-          toast({
-            title: 'Erro',
-            description: 'Não foi possível carregar os mutirões disponíveis: ' + (response.erro || 'Erro desconhecido'),
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar mutirões:', error);
+  const carregarMutiroes = async () => {
+    try {
+      setLoading(true);
+      const response = await api.buscarMutiroes();
+      
+      console.log("Resposta buscarMutiroes:", response);
+      
+      if (response.sucesso) {
+        setMutiroes(response.dados.mutiroes || []);
+      } else {
         toast({
           title: 'Erro',
-          description: 'Não foi possível carregar os mutirões disponíveis',
+          description: 'Não foi possível carregar os mutirões disponíveis: ' + (response.erro || 'Erro desconhecido'),
           variant: 'destructive',
         });
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Erro ao carregar mutirões:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os mutirões disponíveis',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     carregarMutiroes();
   }, [toast]);
 
@@ -52,7 +54,13 @@ const MutiroesDisponiveis = () => {
   return (
     <MainLayout>
       <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-2">Mutirões de Castração Disponíveis</h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-3xl font-bold">Mutirões de Castração Disponíveis</h1>
+          <Button variant="outline" size="sm" onClick={carregarMutiroes}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </div>
         <p className="text-muted-foreground mb-8">
           Selecione um mutirão abaixo para agendar a castração do seu pet
         </p>

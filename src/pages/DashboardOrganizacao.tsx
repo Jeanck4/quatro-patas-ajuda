@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,11 +24,14 @@ const DashboardOrganizacao = () => {
   const loadMutiroes = async (organizacaoId: string) => {
     try {
       setLoading(true);
+      console.log(`Loading mutiroes for organization ID: ${organizacaoId}`);
       const response = await api.buscarMutiroesOrganizacao(organizacaoId);
       
       if (response.sucesso) {
+        console.log("Mutirões carregados com sucesso:", response.dados.mutiroes);
         setMutiroes(response.dados.mutiroes || []);
       } else {
+        console.error("Erro ao carregar mutirões:", response.erro);
         toast({
           title: 'Erro',
           description: 'Não foi possível carregar os mutirões: ' + (response.erro || 'Erro desconhecido'),
@@ -67,6 +69,12 @@ const DashboardOrganizacao = () => {
     logout();
   };
 
+  const handleRefreshMutiroes = () => {
+    if (currentUser?.organizacao_id) {
+      loadMutiroes(currentUser.organizacao_id);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="container py-8">
@@ -99,10 +107,17 @@ const DashboardOrganizacao = () => {
           </TabsList>
 
           <TabsContent value="mutiroes">
-            <h2 className="text-xl font-semibold mb-4">Meus Mutirões de Castração</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Meus Mutirões de Castração</h2>
+              <Button variant="outline" size="sm" onClick={handleRefreshMutiroes}>
+                Atualizar Lista
+              </Button>
+            </div>
             
             {loading ? (
-              <p>Carregando mutirões...</p>
+              <div className="flex justify-center items-center p-8">
+                <p>Carregando mutirões...</p>
+              </div>
             ) : mutiroes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mutiroes.map((mutirao) => (
@@ -131,6 +146,13 @@ const DashboardOrganizacao = () => {
                             <p>{mutirao.vagas_disponiveis} disponíveis de {mutirao.total_vagas}</p>
                           </div>
                         </div>
+
+                        {mutirao.nome_ong && (
+                          <div>
+                            <p className="font-medium">ONG Parceira</p>
+                            <p className="text-sm">{mutirao.nome_ong}</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter>
