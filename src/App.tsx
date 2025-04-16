@@ -15,6 +15,7 @@ import CadastroPet from "./pages/CadastroPet";
 import ListaONGs from "./pages/ListaONGs";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import MutiroesDisponiveis from "./pages/MutiroesDisponiveis";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => {
               <Route path="/cadastro/ong" element={<CadastroOngOrganizacao />} />
               <Route path="/cadastro/pet" element={<CadastroPet />} />
               <Route path="/ongs" element={<ListaONGs />} />
+              <Route path="/mutiroes" element={<MutiroesDisponiveis />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

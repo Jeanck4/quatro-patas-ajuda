@@ -1,7 +1,17 @@
 
 import express from 'express';
 import cors from 'cors';
-import { inserirTutor, inserirPet, inserirOng, inserirOrganizacao, testarConexao, query } from '../database/conexao.js';
+import { 
+  inserirTutor, 
+  inserirPet, 
+  inserirOng, 
+  inserirOrganizacao, 
+  testarConexao, 
+  query,
+  inserirMutirao,
+  buscarMutiroes,
+  buscarAgendamentosTutor 
+} from '../database/conexao.js';
 
 const app = express();
 const PORT = 3001;
@@ -78,6 +88,101 @@ app.post('/api/ongs', async (req, res) => {
   } catch (err) {
     console.error('Erro no backend:', err);
     res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
+  }
+});
+
+// Rota para cadastrar mutirão
+app.post('/api/mutiroes', async (req, res) => {
+  try {
+    const resultado = await inserirMutirao(req.body);
+    if (resultado.sucesso) {
+      res.status(201).json({ sucesso: true, id: resultado.id });
+    } else {
+      res.status(400).json({ sucesso: false, erro: resultado.erro });
+    }
+  } catch (err) {
+    console.error('Erro no backend:', err);
+    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
+  }
+});
+
+// Rota para buscar mutirões disponíveis
+app.get('/api/mutiroes', async (req, res) => {
+  try {
+    const resultado = await buscarMutiroes();
+    res.json(resultado);
+  } catch (err) {
+    console.error('Erro ao buscar mutirões:', err);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar mutirões' });
+  }
+});
+
+// Rota para buscar agendamentos de um tutor
+app.get('/api/tutores/:tutorId/agendamentos', async (req, res) => {
+  try {
+    const { tutorId } = req.params;
+    const resultado = await buscarAgendamentosTutor(tutorId);
+    res.json(resultado);
+  } catch (err) {
+    console.error('Erro ao buscar agendamentos:', err);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar agendamentos do tutor' });
+  }
+});
+
+// Rota para criar um agendamento
+app.post('/api/agendamentos', async (req, res) => {
+  try {
+    const { tutorId, petId, mutiraoId, observacoes } = req.body;
+    
+    // Verifica se o mutirão existe e tem vagas disponíveis
+    const mutiraoResult = await query(
+      'SELECT vagas_disponiveis FROM mutiroes WHERE mutirao_id = $1',
+      [mutiraoId]
+    );
+    
+    if (mutiraoResult.rows.length === 0) {
+      return res.status(404).json({ sucesso: false, erro: 'Mutirão não encontrado' });
+    }
+    
+    if (mutiraoResult.rows[0].vagas_disponiveis <= 0) {
+      return res.status(400).json({ sucesso: false, erro: 'Não há vagas disponíveis neste mutirão' });
+    }
+    
+    // Criar o agendamento em uma transação para garantir atomicidade
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Inserir agendamento
+      const agendamentoResult = await client.query(
+        `INSERT INTO agendamentos (tutor_id, pet_id, mutirao_id, observacoes)
+         VALUES ($1, $2, $3, $4)
+         RETURNING agendamento_id`,
+        [tutorId, petId, mutiraoId, observacoes || '']
+      );
+      
+      // Atualizar vagas disponíveis
+      await client.query(
+        `UPDATE mutiroes SET vagas_disponiveis = vagas_disponiveis - 1
+         WHERE mutirao_id = $1`,
+        [mutiraoId]
+      );
+      
+      await client.query('COMMIT');
+      
+      res.status(201).json({
+        sucesso: true,
+        id: agendamentoResult.rows[0].agendamento_id
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Erro ao criar agendamento:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao criar agendamento' });
   }
 });
 

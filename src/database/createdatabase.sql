@@ -62,11 +62,11 @@ CREATE TABLE pets (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela para armazenar informações das campanhas de castração
-CREATE TABLE campanhas (
-    campanha_id SERIAL PRIMARY KEY,
+-- Tabela para armazenar informações dos mutirões (antigo campanhas)
+CREATE TABLE mutiroes (
+    mutirao_id SERIAL PRIMARY KEY,
     ong_id INTEGER REFERENCES ongs(ong_id) ON DELETE CASCADE,
-    data_campanha DATE NOT NULL,
+    data_mutirao DATE NOT NULL,
     total_vagas INTEGER NOT NULL,
     vagas_disponiveis INTEGER NOT NULL,
     endereco TEXT NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE campanhas (
 -- Tabela para armazenar os agendamentos de castração
 CREATE TABLE agendamentos (
     agendamento_id SERIAL PRIMARY KEY,
-    campanha_id INTEGER REFERENCES campanhas(campanha_id) ON DELETE CASCADE,
+    mutirao_id INTEGER REFERENCES mutiroes(mutirao_id) ON DELETE CASCADE,
     pet_id INTEGER REFERENCES pets(pet_id) ON DELETE CASCADE,
     tutor_id INTEGER REFERENCES tutores(tutor_id) ON DELETE CASCADE,
     status VARCHAR(20) NOT NULL DEFAULT 'Agendado', -- Ex: Agendado, Confirmado, Realizado, Cancelado
@@ -89,9 +89,9 @@ CREATE TABLE agendamentos (
 
 -- Índices para melhorar a performance de consultas frequentes
 CREATE INDEX idx_pets_tutor_id ON pets(tutor_id);
-CREATE INDEX idx_campanhas_ong_id ON campanhas(ong_id);
-CREATE INDEX idx_campanhas_data ON campanhas(data_campanha);
-CREATE INDEX idx_agendamentos_campanha_id ON agendamentos(campanha_id);
+CREATE INDEX idx_mutiroes_ong_id ON mutiroes(ong_id);
+CREATE INDEX idx_mutiroes_data ON mutiroes(data_mutirao);
+CREATE INDEX idx_agendamentos_mutirao_id ON agendamentos(mutirao_id);
 CREATE INDEX idx_agendamentos_pet_id ON agendamentos(pet_id);
 CREATE INDEX idx_agendamentos_tutor_id ON agendamentos(tutor_id);
 CREATE INDEX idx_agendamentos_status ON agendamentos(status);

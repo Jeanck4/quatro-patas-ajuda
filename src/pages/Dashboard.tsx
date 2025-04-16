@@ -4,24 +4,28 @@ import { Navigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { EditPetDialog } from '@/components/EditPetDialog';
 import * as api from '@/services/api';
-import { Dog, Building, ListPlus, Settings, Calendar, LogOut, Trash, Pencil } from 'lucide-react';
+import { Dog, Calendar, Settings, LogOut, Trash, Pencil, MapPin, HelpCircle } from 'lucide-react';
 
 const Dashboard = () => {
   const { currentUser, userType, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<any[]>([]);
   const [loading, setPetsLoading] = useState(true);
+  const [agendamentos, setAgendamentos] = useState<any[]>([]);
+  const [agendamentosLoading, setAgendamentosLoading] = useState(true);
   const [editingPet, setEditingPet] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && userType === 'tutor' && currentUser?.tutor_id) {
       loadPets(currentUser.tutor_id);
+      loadAgendamentos(currentUser.tutor_id);
     }
   }, [isAuthenticated, userType, currentUser]);
 
@@ -30,7 +34,6 @@ const Dashboard = () => {
       setPetsLoading(true);
       console.log("Fetching pets for tutor ID:", tutorId);
       
-      // Using buscarPetsTutor instead of getPets to match the existing function name in api.ts
       const response = await api.buscarPetsTutor(tutorId);
       
       console.log("API response for pets:", response);
@@ -57,6 +60,38 @@ const Dashboard = () => {
     }
   };
 
+  const loadAgendamentos = async (tutorId: string) => {
+    try {
+      setAgendamentosLoading(true);
+      console.log("Fetching agendamentos for tutor ID:", tutorId);
+      
+      // Implemente a função buscarAgendamentosTutor no arquivo api.ts
+      const response = await api.buscarAgendamentosTutor(tutorId);
+      
+      console.log("API response for agendamentos:", response);
+      
+      if (response.sucesso) {
+        setAgendamentos(response.dados.agendamentos || []);
+      } else {
+        console.error("Failed to load agendamentos:", response.erro);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível carregar seus agendamentos: ' + (response.erro || 'Erro desconhecido'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar agendamentos:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar seus agendamentos',
+        variant: 'destructive',
+      });
+    } finally {
+      setAgendamentosLoading(false);
+    }
+  };
+
   const handleEditPet = (pet: any) => {
     setEditingPet(pet);
     setIsEditDialogOpen(true);
@@ -75,7 +110,6 @@ const Dashboard = () => {
 
   const handleDeletePet = async (petId: string) => {
     try {
-      // Using removerPet instead of removePet to match the function in api.ts
       const response = await api.removerPet(petId);
       if (response.sucesso) {
         toast({
@@ -102,6 +136,12 @@ const Dashboard = () => {
     }
   };
 
+  // Formata a data no formato brasileiro
+  const formatarData = (dataString: string) => {
+    const data = new Date(dataString);
+    return data.toLocaleDateString('pt-BR');
+  };
+
   // Redirect if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -123,14 +163,14 @@ const Dashboard = () => {
           {userType === 'tutor' && (
             <Button className="mt-4 md:mt-0" asChild>
               <Link to="/cadastro/pet">
-                <ListPlus className="mr-2 h-4 w-4" />
+                <Dog className="mr-2 h-4 w-4" />
                 Cadastrar Novo Pet
               </Link>
             </Button>
           )}
         </div>
 
-        <Tabs defaultValue={userType === 'tutor' ? 'meus-pets' : 'ongs'} className="w-full">
+        <Tabs defaultValue={userType === 'tutor' ? 'meus-pets' : 'agendamentos'} className="w-full">
           <TabsList className="mb-8">
             {userType === 'tutor' && (
               <>
@@ -138,25 +178,17 @@ const Dashboard = () => {
                   <Dog className="mr-2 h-4 w-4" />
                   Meus Pets
                 </TabsTrigger>
-                <TabsTrigger value="ongs">
-                  <Building className="mr-2 h-4 w-4" />
-                  ONGs
-                </TabsTrigger>
                 <TabsTrigger value="agendamentos">
                   <Calendar className="mr-2 h-4 w-4" />
                   Agendamentos
                 </TabsTrigger>
               </>
             )}
-            {userType === 'ong' && (
+            {userType === 'organizacao' && (
               <>
                 <TabsTrigger value="agendamentos">
                   <Calendar className="mr-2 h-4 w-4" />
                   Agendamentos
-                </TabsTrigger>
-                <TabsTrigger value="perfil">
-                  <Building className="mr-2 h-4 w-4" />
-                  Perfil
                 </TabsTrigger>
               </>
             )}
@@ -225,7 +257,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground">Você ainda não cadastrou nenhum pet.</p>
                   <Button className="mt-4" asChild>
                     <Link to="/cadastro/pet">
-                      <ListPlus className="mr-2 h-4 w-4" />
+                      <Dog className="mr-2 h-4 w-4" />
                       Cadastrar Pet
                     </Link>
                   </Button>
@@ -234,14 +266,85 @@ const Dashboard = () => {
             </TabsContent>
           )}
           
-          <TabsContent value="ongs">
-            <h2 className="text-xl font-semibold mb-4">ONGs Parceiras</h2>
-            <p>Lista de ONGs parceiras estará disponível em breve.</p>
-          </TabsContent>
-          
           <TabsContent value="agendamentos">
-            <h2 className="text-xl font-semibold mb-4">Meus Agendamentos</h2>
-            <p>Sistema de agendamentos estará disponível em breve.</p>
+            <h2 className="text-xl font-semibold mb-4">Meus Agendamentos de Mutirão</h2>
+            
+            {agendamentosLoading ? (
+              <p>Carregando seus agendamentos...</p>
+            ) : agendamentos.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {agendamentos.map((agendamento) => (
+                  <Card key={agendamento.agendamento_id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <CardTitle>Mutirão de Castração</CardTitle>
+                          <CardDescription>
+                            {formatarData(agendamento.data_mutirao)}
+                          </CardDescription>
+                        </div>
+                        <Badge
+                          className={
+                            agendamento.status === 'Agendado' 
+                              ? 'bg-blue-500' 
+                              : agendamento.status === 'Confirmado' 
+                                ? 'bg-green-500' 
+                                : agendamento.status === 'Realizado' 
+                                  ? 'bg-green-700'
+                                  : 'bg-red-500'
+                          }
+                        >
+                          {agendamento.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-2">
+                          <div className="mt-1"><Dog className="h-5 w-5 text-primary" /></div>
+                          <div>
+                            <p className="font-medium">Pet</p>
+                            <p>{agendamento.nome_pet}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2">
+                          <div className="mt-1"><MapPin className="h-5 w-5 text-primary" /></div>
+                          <div>
+                            <p className="font-medium">Local</p>
+                            <p>{agendamento.nome_ong}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {agendamento.endereco_ong}, {agendamento.cidade_ong}/{agendamento.estado_ong}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {agendamento.observacoes && (
+                          <div className="flex items-start gap-2">
+                            <div className="mt-1"><HelpCircle className="h-5 w-5 text-primary" /></div>
+                            <div>
+                              <p className="font-medium">Observações</p>
+                              <p className="text-sm">{agendamento.observacoes}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-muted rounded-lg">
+                <Calendar className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
+                <p className="text-muted-foreground">Você ainda não possui agendamentos em mutirões.</p>
+                <Button className="mt-4" asChild>
+                  <Link to="/ongs">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Ver Mutirões Disponíveis
+                  </Link>
+                </Button>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="config">
