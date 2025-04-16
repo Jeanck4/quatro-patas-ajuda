@@ -6,23 +6,27 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/layouts/MainLayout';
 import * as api from '@/services/api';
-import { MapPin, Calendar, Users, RefreshCw } from 'lucide-react';
+import { MapPin, Calendar, Users, RefreshCw, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const MutiroesDisponiveis = () => {
   const [mutiroes, setMutiroes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const carregarMutiroes = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await api.buscarMutiroes();
       
       console.log("Resposta buscarMutiroes:", response);
       
       if (response.sucesso) {
-        setMutiroes(response.dados.mutiroes || []);
+        setMutiroes(response.dados?.mutiroes || []);
       } else {
+        setError(response.erro || 'Erro desconhecido ao carregar mutirões');
         toast({
           title: 'Erro',
           description: 'Não foi possível carregar os mutirões disponíveis: ' + (response.erro || 'Erro desconhecido'),
@@ -31,9 +35,11 @@ const MutiroesDisponiveis = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar mutirões:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor';
+      setError(errorMessage);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar os mutirões disponíveis',
+        description: 'Não foi possível carregar os mutirões disponíveis: ' + errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -43,7 +49,7 @@ const MutiroesDisponiveis = () => {
 
   useEffect(() => {
     carregarMutiroes();
-  }, [toast]);
+  }, []);
 
   // Formata a data no formato brasileiro
   const formatarData = (dataString: string) => {
@@ -64,6 +70,23 @@ const MutiroesDisponiveis = () => {
         <p className="text-muted-foreground mb-8">
           Selecione um mutirão abaixo para agendar a castração do seu pet
         </p>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro de conexão</AlertTitle>
+            <AlertDescription>
+              <div className="mb-2">
+                {error === 'Failed to fetch'
+                  ? 'Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 e tente novamente.'
+                  : error}
+              </div>
+              <div className="text-xs">
+                {error === 'Failed to fetch' && 'Execute: node src/api/server.js'}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {loading ? (
           <div className="flex justify-center items-center h-40">
@@ -127,9 +150,11 @@ const MutiroesDisponiveis = () => {
         ) : (
           <div className="text-center py-12 bg-muted rounded-lg">
             <Calendar className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-            <p className="text-muted-foreground">Nenhum mutirão de castração disponível no momento.</p>
+            <p className="text-muted-foreground">
+              {error ? 'Não foi possível carregar os mutirões devido a um erro.' : 'Nenhum mutirão de castração disponível no momento.'}
+            </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Volte em breve para verificar novos mutirões.
+              {error ? 'Clique em "Atualizar" para tentar novamente.' : 'Volte em breve para verificar novos mutirões.'}
             </p>
           </div>
         )}

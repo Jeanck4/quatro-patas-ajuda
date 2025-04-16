@@ -12,7 +12,38 @@ interface ApiResponse<T = any> {
   dados?: T;
 }
 
-// Funções para consumir a API do backend
+// Estado de conexão para evitar múltiplas tentativas quando o servidor está offline
+let serverOnline: boolean | null = null;
+let lastCheck: number = 0;
+const CHECK_INTERVAL = 5000; // 5 segundos entre verificações
+
+/**
+ * Verifica se o servidor está online
+ */
+export const isServerOnline = async (): Promise<boolean> => {
+  const now = Date.now();
+  
+  // Se já verificamos recentemente, retorna o último estado conhecido
+  if (serverOnline !== null && (now - lastCheck) < CHECK_INTERVAL) {
+    return serverOnline;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/teste-conexao`, { 
+      signal: AbortSignal.timeout(3000) // timeout de 3 segundos
+    });
+    const data = await response.json();
+    
+    serverOnline = data.sucesso === true;
+    lastCheck = now;
+    return serverOnline;
+  } catch (error) {
+    console.error('Erro ao verificar conexão com servidor:', error);
+    serverOnline = false;
+    lastCheck = now;
+    return false;
+  }
+};
 
 /**
  * Testa a conexão com o servidor e banco de dados
@@ -21,9 +52,19 @@ export const testarConexao = async (): Promise<ApiResponse<{agora: string}>> => 
   try {
     const response = await fetch(`${API_URL}/teste-conexao`);
     const data = await response.json();
+    
+    // Atualiza o estado de conexão
+    serverOnline = data.sucesso === true;
+    lastCheck = Date.now();
+    
     return data;
   } catch (error) {
     console.error('Erro ao testar conexão:', error);
+    
+    // Atualiza o estado de conexão
+    serverOnline = false;
+    lastCheck = Date.now();
+    
     return { 
       sucesso: false, 
       erro: error instanceof Error ? error.message : 'Erro desconhecido ao conectar ao servidor' 
