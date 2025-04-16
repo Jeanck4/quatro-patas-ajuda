@@ -9,11 +9,16 @@ import { useAuth } from '@/contexts/AuthContext';
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, userType, redirectToDashboard } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleDashboardClick = () => {
+    redirectToDashboard();
+    setIsOpen(false);
   };
 
   return (
@@ -47,26 +52,28 @@ const NavBar = () => {
             Sobre
           </NavLink>
           <NavLink 
-            to="/ongs" 
+            to="/mutiroes" 
             className={({ isActive }) => cn(
               "text-sm font-medium transition-colors hover:text-primary",
               isActive ? "text-primary" : "text-foreground/60"
             )}
           >
-            ONGs
+            Mutirões
           </NavLink>
           
           {isAuthenticated ? (
             <>
-              <NavLink 
-                to="/dashboard" 
-                className={({ isActive }) => cn(
+              <Button 
+                variant="ghost"
+                onClick={handleDashboardClick}
+                className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  isActive ? "text-primary" : "text-foreground/60"
+                  location.pathname.includes("/dashboard") ? "text-primary" : "text-foreground/60"
                 )}
               >
+                <LayoutDashboard className="h-4 w-4 mr-2" />
                 Dashboard
-              </NavLink>
+              </Button>
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
@@ -119,30 +126,27 @@ const NavBar = () => {
               Sobre
             </NavLink>
             <NavLink 
-              to="/ongs" 
+              to="/mutiroes" 
               className={({ isActive }) => cn(
                 "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
                 isActive ? "bg-primary-50 text-primary" : "text-foreground/60"
               )}
               onClick={() => setIsOpen(false)}
             >
-              ONGs
+              Mutirões
             </NavLink>
             
             <div className="flex flex-col gap-2 pt-2 border-t">
               {isAuthenticated ? (
                 <>
-                  <NavLink 
-                    to="/dashboard" 
-                    className={({ isActive }) => cn(
-                      "flex items-center text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
-                      isActive ? "bg-primary-50 text-primary" : "text-foreground/60"
-                    )}
-                    onClick={() => setIsOpen(false)}
+                  <Button 
+                    variant="ghost"
+                    onClick={handleDashboardClick}
+                    className="flex items-center justify-start text-sm font-medium hover:text-primary p-2 rounded-md"
                   >
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     Dashboard
-                  </NavLink>
+                  </Button>
                   <Button variant="outline" onClick={() => { handleLogout(); setIsOpen(false); }}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair

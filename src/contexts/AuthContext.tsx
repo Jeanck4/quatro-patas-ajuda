@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   
   // Função para redirecionar o usuário para o dashboard apropriado
   const redirectToDashboard = () => {
-    if (!isAuthenticated) {
+    if (!currentUser) {
       navigate('/login');
       return;
     }
