@@ -1,4 +1,3 @@
-
 /**
  * API service for making requests to our backend server
  */
@@ -320,6 +319,62 @@ export const buscarOngsOrganizacao = async (organizacaoId: string): Promise<ApiR
     return { 
       sucesso: false, 
       erro: error instanceof Error ? error.message : 'Erro ao buscar ONGs da organização' 
+    };
+  }
+};
+
+/**
+ * Busca os agendamentos de um tutor
+ */
+export const buscarAgendamentosTutor = async (tutorId: string): Promise<ApiResponse<{agendamentos: any[]}>> => {
+  try {
+    console.log(`Buscando agendamentos para tutor ${tutorId}...`);
+    const response = await fetch(`${API_URL}/tutores/${tutorId}/agendamentos`);
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    const data = await response.json();
+    console.log('Agendamentos encontrados:', data);
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar agendamentos:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao buscar agendamentos' 
+    };
+  }
+};
+
+/**
+ * Busca todos os mutirões disponíveis
+ */
+export const buscarMutiroes = async (): Promise<ApiResponse<{mutiroes: any[]}>> => {
+  try {
+    console.log('Buscando mutirões disponíveis...');
+    const response = await fetch(`${API_URL}/mutiroes`);
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    const data = await response.json();
+    console.log('Mutirões encontrados:', data);
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar mutirões:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao buscar mutirões' 
     };
   }
 };
