@@ -1,242 +1,189 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useNavigate, Link } from 'react-router-dom';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
+import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 const Login = () => {
-  const navigate = useNavigate();
+  const { login, userType } = useAuth();
   const { toast } = useToast();
-  const { login, isLoading } = useAuth();
-  
-  const [tutorData, setTutorData] = useState({
-    email: '',
-    senha: ''
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'tutor' | 'organizacao'>('tutor');
+
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      senha: '',
+    },
   });
-  
-  const [organizacaoData, setOrganizacaoData] = useState({
-    email: '',
-    senha: ''
-  });
-  
-  const handleTutorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setTutorData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleOrganizacaoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setOrganizacaoData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleTutorSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+
+  const handleLogin = async (values: LoginFormValues) => {
+    setIsLoading(true);
+
     try {
-      const success = await login(tutorData.email, tutorData.senha, 'tutor');
-      
+      const success = await login(values.email, values.senha, activeTab);
+
       if (success) {
         toast({
-          title: "Login realizado!",
-          description: "Bem-vindo de volta ao Quatro Patas.",
+          title: 'Bem-vindo de volta ao Quatro Patas',
+          description: 'Login realizado!',
         });
         
-        navigate('/dashboard');
+        // Redirecione com base no tipo de usuário
+        if (activeTab === 'tutor') {
+          navigate('/dashboard');
+        } else {
+          navigate('/dashboard/organizacao');
+        }
       } else {
         toast({
-          title: "Falha no login",
-          description: "Email ou senha incorretos.",
-          variant: "destructive"
+          title: 'Erro no login',
+          description: 'Email ou senha incorretos',
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('Erro durante login:', error);
+      console.error('Erro no login:', error);
       toast({
-        title: "Erro no login",
-        description: "Ocorreu um erro ao processar sua solicitação.",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Falha ao realizar login, tente novamente',
+        variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  const handleOrganizacaoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const success = await login(organizacaoData.email, organizacaoData.senha, 'organizacao');
-      
-      if (success) {
-        toast({
-          title: "Login realizado!",
-          description: "Bem-vindo de volta ao Quatro Patas.",
-        });
-        
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Falha no login",
-          description: "Email ou senha incorretos.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Erro durante login:', error);
-      toast({
-        title: "Erro no login",
-        description: "Ocorreu um erro ao processar sua solicitação.",
-        variant: "destructive"
-      });
-    }
-  };
-  
+
   return (
     <MainLayout>
-      <div className="container py-16">
+      <div className="container py-8">
         <div className="max-w-md mx-auto">
-          <Card className="border shadow-md">
+          <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-primary">Entrar no Quatro Patas</CardTitle>
+              <CardTitle className="text-2xl">Login</CardTitle>
               <CardDescription>
-                Acesse sua conta para continuar
+                Entre na sua conta do Quatro Patas
               </CardDescription>
             </CardHeader>
-            
-            <Tabs defaultValue="tutor" className="w-full">
+
+            <Tabs defaultValue="tutor" className="w-full" onValueChange={(value) => setActiveTab(value as 'tutor' | 'organizacao')}>
               <TabsList className="grid grid-cols-2 mb-4 mx-6">
-                <TabsTrigger value="tutor">Sou Tutor</TabsTrigger>
-                <TabsTrigger value="organizacao">Sou Organização</TabsTrigger>
+                <TabsTrigger value="tutor">Tutor</TabsTrigger>
+                <TabsTrigger value="organizacao">Organização</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="tutor">
-                <form onSubmit={handleTutorSubmit}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="tutor-email">Email</Label>
-                      <Input
-                        id="tutor-email"
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+                      <FormField
+                        control={form.control}
                         name="email"
-                        type="email"
-                        placeholder="seu.email@exemplo.com"
-                        value={tutorData.email}
-                        onChange={handleTutorChange}
-                        required
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="seu.email@exemplo.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="tutor-senha">Senha</Label>
-                        <Button type="button" variant="link" className="p-0 h-auto text-sm">
-                          Esqueceu a senha?
-                        </Button>
-                      </div>
-                      <Input
-                        id="tutor-senha"
+
+                      <FormField
+                        control={form.control}
                         name="senha"
-                        type="password"
-                        placeholder="******"
-                        value={tutorData.senha}
-                        onChange={handleTutorChange}
-                        required
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Senha</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="********" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                  </CardContent>
-                  
-                  <CardFooter className="flex flex-col space-y-4">
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-primary hover:bg-primary-600"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <span className="flex items-center">
-                          <span className="animate-spin mr-2">⏳</span> Processando...
-                        </span>
-                      ) : (
-                        "Entrar como Tutor"
-                      )}
-                    </Button>
-                    <div className="text-center text-sm">
-                      <span className="text-gray-500">Não tem uma conta? </span>
-                      <Button type="button" variant="link" className="p-0 h-auto" onClick={() => navigate('/cadastro/tutor')}>
-                        Cadastre-se
+
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? 'Entrando...' : 'Entrar'}
                       </Button>
-                    </div>
-                  </CardFooter>
-                </form>
+                    </form>
+                  </Form>
+                </CardContent>
               </TabsContent>
-              
+
               <TabsContent value="organizacao">
-                <form onSubmit={handleOrganizacaoSubmit}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="organizacao-email">Email</Label>
-                      <Input
-                        id="organizacao-email"
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+                      <FormField
+                        control={form.control}
                         name="email"
-                        type="email"
-                        placeholder="organizacao@exemplo.com"
-                        value={organizacaoData.email}
-                        onChange={handleOrganizacaoChange}
-                        required
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="sua.organizacao@exemplo.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="organizacao-senha">Senha</Label>
-                        <Button type="button" variant="link" className="p-0 h-auto text-sm">
-                          Esqueceu a senha?
-                        </Button>
-                      </div>
-                      <Input
-                        id="organizacao-senha"
+
+                      <FormField
+                        control={form.control}
                         name="senha"
-                        type="password"
-                        placeholder="******"
-                        value={organizacaoData.senha}
-                        onChange={handleOrganizacaoChange}
-                        required
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Senha</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="********" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                  </CardContent>
-                  
-                  <CardFooter className="flex flex-col space-y-4">
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-primary hover:bg-primary-600"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <span className="flex items-center">
-                          <span className="animate-spin mr-2">⏳</span> Processando...
-                        </span>
-                      ) : (
-                        "Entrar como Organização"
-                      )}
-                    </Button>
-                    <div className="text-center text-sm">
-                      <span className="text-gray-500">Não tem uma conta? </span>
-                      <Button type="button" variant="link" className="p-0 h-auto" onClick={() => navigate('/cadastro/organizacao')}>
-                        Cadastre-se
+
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? 'Entrando...' : 'Entrar'}
                       </Button>
-                    </div>
-                  </CardFooter>
-                </form>
+                    </form>
+                  </Form>
+                </CardContent>
               </TabsContent>
             </Tabs>
+
+            <CardFooter className="flex flex-col space-y-2">
+              <div className="text-center text-sm">
+                Ainda não tem uma conta?
+              </div>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/cadastro/tutor">Cadastrar como Tutor</Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/cadastro/organizacao">Cadastrar como Organização</Link>
+                </Button>
+              </div>
+            </CardFooter>
           </Card>
         </div>
       </div>

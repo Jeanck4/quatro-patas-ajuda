@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as api from '../services/api';
 
 interface AuthContextType {
@@ -9,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, senha: string, type: 'tutor' | 'organizacao') => Promise<boolean>;
   logout: () => void;
+  redirectToDashboard: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [userType, setUserType] = useState<'tutor' | 'organizacao' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   
   // Verificar se o usuário está autenticado ao carregar a página
   useEffect(() => {
@@ -75,6 +78,20 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   };
   
+  // Função para redirecionar o usuário para o dashboard apropriado
+  const redirectToDashboard = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    if (userType === 'tutor') {
+      navigate('/dashboard');
+    } else if (userType === 'organizacao') {
+      navigate('/dashboard/organizacao');
+    }
+  };
+  
   // Função para fazer logout
   const logout = () => {
     setCurrentUser(null);
@@ -83,6 +100,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     localStorage.removeItem('userType');
     localStorage.removeItem('tutorId');
     localStorage.removeItem('organizacaoId');
+    navigate('/login');
   };
   
   const value = {
@@ -91,7 +109,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     isAuthenticated: !!currentUser,
     isLoading,
     login,
-    logout
+    logout,
+    redirectToDashboard
   };
   
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

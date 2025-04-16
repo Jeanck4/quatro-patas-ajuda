@@ -128,6 +128,30 @@ export const inserirOng = async (ong: any): Promise<ApiResponse<never>> => {
 };
 
 /**
+ * Insere um mutirão no banco de dados
+ */
+export const inserirMutirao = async (mutirao: any): Promise<ApiResponse<never>> => {
+  try {
+    const response = await fetch(`${API_URL}/mutiroes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(mutirao),
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao inserir mutirão:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao salvar dados do mutirão' 
+    };
+  }
+};
+
+/**
  * Realiza login de tutores
  */
 export const loginTutor = async (email: string, senha: string): Promise<ApiResponse<{tutor: any}>> => {
@@ -375,6 +399,34 @@ export const buscarMutiroes = async (): Promise<ApiResponse<{mutiroes: any[]}>> 
     return { 
       sucesso: false, 
       erro: error instanceof Error ? error.message : 'Erro ao buscar mutirões' 
+    };
+  }
+};
+
+/**
+ * Busca os mutirões de uma organização específica
+ */
+export const buscarMutiroesOrganizacao = async (organizacaoId: string): Promise<ApiResponse<{mutiroes: any[]}>> => {
+  try {
+    console.log(`Buscando mutirões da organização ${organizacaoId}...`);
+    const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/mutiroes`);
+    
+    if (!response.ok) {
+      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      return {
+        sucesso: false,
+        erro: `Erro na API: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    const data = await response.json();
+    console.log(`Mutirões da organização ${organizacaoId} encontrados:`, data);
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar mutirões da organização:', error);
+    return { 
+      sucesso: false, 
+      erro: error instanceof Error ? error.message : 'Erro ao buscar mutirões da organização' 
     };
   }
 };

@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import { 
@@ -114,6 +113,21 @@ app.get('/api/mutiroes', async (req, res) => {
   } catch (err) {
     console.error('Erro ao buscar mutirões:', err);
     res.status(500).json({ sucesso: false, erro: 'Erro ao buscar mutirões' });
+  }
+});
+
+// Rota para buscar mutirões de uma organização específica
+app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
+  try {
+    const { organizacaoId } = req.params;
+    const result = await query(
+      'SELECT * FROM mutiroes WHERE organizacao_id = $1',
+      [organizacaoId]
+    );
+    res.json({ sucesso: true, dados: { mutiroes: result.rows } });
+  } catch (error) {
+    console.error('Erro ao buscar mutirões da organização:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar mutirões da organização' });
   }
 });
 
