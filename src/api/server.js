@@ -144,15 +144,16 @@ app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
       return res.status(400).json({ sucesso: false, erro: 'ID da organização não fornecido' });
     }
     
-    // Modificando para buscar mutirões através das ONGs vinculadas à organização
+    // Query atualizada para buscar todos os mutirões associados a ONGs da organização
     const result = await query(
       `SELECT m.*, 
               o.nome as nome_ong, 
               org.nome as nome_organizacao
        FROM mutiroes m
-       LEFT JOIN ongs o ON m.ong_id = o.ong_id
-       LEFT JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
-       WHERE org.organizacao_id = $1`,
+       JOIN ongs o ON m.ong_id = o.ong_id
+       JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
+       WHERE org.organizacao_id = $1
+       ORDER BY m.data_mutirao DESC`,
       [organizacaoId]
     );
     

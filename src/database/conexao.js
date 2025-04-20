@@ -1,4 +1,3 @@
-
 /**
  * PostgreSQL database connection module
  */
@@ -156,6 +155,13 @@ export const inserirMutirao = async (mutirao) => {
     console.log('Inserindo mutirão no PostgreSQL:', mutirao);
     const client = await pool.connect();
 
+    const ongCheck = await client.query('SELECT ong_id FROM ongs WHERE ong_id = $1', [mutirao.ong_id]);
+    
+    if (ongCheck.rows.length === 0) {
+      client.release();
+      return { sucesso: false, erro: `ONG com ID ${mutirao.ong_id} não encontrada` };
+    }
+    
     const result = await client.query(
       `INSERT INTO mutiroes (
         ong_id, data_mutirao, total_vagas, vagas_disponiveis, 
@@ -197,7 +203,6 @@ export const buscarMutiroes = async () => {
       throw new Error('Não foi possível conectar ao banco de dados');
     }
 
-    // Query simplificada para debug
     const result = await client.query(
       `SELECT m.*, o.nome as nome_ong, org.nome as nome_organizacao 
        FROM mutiroes m 
@@ -208,7 +213,6 @@ export const buscarMutiroes = async () => {
 
     console.log(`Mutirões encontrados: ${result.rows.length}`);
     
-    // Log detalhado dos resultados
     if (result.rows.length === 0) {
       console.log('Nenhum mutirão encontrado na consulta');
     } else {

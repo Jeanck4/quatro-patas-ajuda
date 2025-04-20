@@ -144,6 +144,10 @@ const DashboardOrganizacao = () => {
                   <div className="text-xs">
                     {error === 'Failed to fetch' && 'Execute: node src/api/server.js'}
                   </div>
+                  <Button variant="outline" size="sm" className="mt-2" onClick={handleRefreshMutiroes}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Tentar novamente
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
