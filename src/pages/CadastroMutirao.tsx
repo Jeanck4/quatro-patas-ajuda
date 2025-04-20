@@ -12,10 +12,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Building2 } from 'lucide-react';
+import { CalendarIcon, Building2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import * as api from '@/services/api';
@@ -31,6 +32,7 @@ const mutiraoFormSchema = z.object({
   cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP inválido. Formato: 00000-000 ou 00000000."),
   total_vagas: z.coerce.number().int().min(1, "O mutirão deve ter pelo menos 1 vaga."),
   informacoes_adicionais: z.string().optional(),
+  ong_id: z.number().int().min(1, "Selecione uma ONG")
 });
 
 type MutiraoFormValues = z.infer<typeof mutiraoFormSchema>;
@@ -40,7 +42,8 @@ const CadastroMutirao = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [error, setError] = useState<string | null>(null);
+  
   // Formulário usando react-hook-form
   const form = useForm<MutiraoFormValues>({
     resolver: zodResolver(mutiraoFormSchema),
@@ -50,7 +53,8 @@ const CadastroMutirao = () => {
       estado: '',
       cep: '',
       total_vagas: 10,
-      informacoes_adicionais: ''
+      informacoes_adicionais: '',
+      ong_id: 1 // Valor padrão temporário
     }
   });
 
@@ -75,13 +79,21 @@ const CadastroMutirao = () => {
       }
 
       setIsSubmitting(true);
+      setError(null);
+
+      // Verificar se o servidor está online
+      const serverStatus = await api.isServerOnline();
+      if (!serverStatus) {
+        setError('Servidor backend offline. Execute: node src/api/server.js');
+        setIsSubmitting(false);
+        return;
+      }
 
       // Preparar os dados para envio
       const mutiraoData = {
         ...data,
         organizacao_id: currentUser.organizacao_id,
         vagas_disponiveis: data.total_vagas, // Inicialmente todas as vagas estão disponíveis
-        ong_id: 1, // Placeholder - idealmente seria selecionado pelo usuário
       };
 
       console.log("Dados do mutirão para cadastro:", mutiraoData);
@@ -95,6 +107,7 @@ const CadastroMutirao = () => {
         });
         navigate('/dashboard/organizacao');
       } else {
+        setError(resultado.erro || 'Não foi possível cadastrar o mutirão');
         toast({
           title: 'Erro',
           description: resultado.erro || 'Não foi possível cadastrar o mutirão',
@@ -103,9 +116,11 @@ const CadastroMutirao = () => {
       }
     } catch (error) {
       console.error('Erro ao cadastrar mutirão:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao cadastrar mutirão';
+      setError(errorMessage);
       toast({
         title: 'Erro',
-        description: 'Erro ao cadastrar mutirão',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -118,6 +133,18 @@ const CadastroMutirao = () => {
       <div className="container py-8">
         <h1 className="text-3xl font-bold mb-6">Cadastro de Mutirão de Castração</h1>
         
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>
+              {error === 'Failed to fetch'
+                ? 'Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 e tente novamente.'
+                : error}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Novo Mutirão</CardTitle>
@@ -128,6 +155,29 @@ const CadastroMutirao = () => {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="ong_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ONG Responsável</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          placeholder="ID da ONG" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        Digite 1 para ONG padrão (seleção de ONGs será implementada futuramente)
+                      </p>
+                    </FormItem>
+                  )}
+                />
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}

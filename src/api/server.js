@@ -94,7 +94,21 @@ app.post('/api/ongs', async (req, res) => {
 // Rota para cadastrar mutirão
 app.post('/api/mutiroes', async (req, res) => {
   try {
-    const resultado = await inserirMutirao(req.body);
+    console.log('Recebendo requisição para cadastrar mutirão:', req.body);
+    
+    if (!req.body.ong_id) {
+      console.error('Erro: ong_id não fornecido');
+      return res.status(400).json({ sucesso: false, erro: 'ong_id é obrigatório' });
+    }
+    
+    // Processa o corpo da requisição
+    const mutiraoData = {
+      ...req.body,
+      vagas_disponiveis: req.body.vagas_disponiveis || req.body.total_vagas
+    };
+    
+    const resultado = await inserirMutirao(mutiraoData);
+    
     if (resultado.sucesso) {
       res.status(201).json({ sucesso: true, id: resultado.id });
     } else {
@@ -109,7 +123,9 @@ app.post('/api/mutiroes', async (req, res) => {
 // Rota para buscar mutirões disponíveis
 app.get('/api/mutiroes', async (req, res) => {
   try {
+    console.log('Requisição recebida: buscar mutirões disponíveis');
     const resultado = await buscarMutiroes();
+    console.log('Resultado da busca de mutirões:', resultado);
     res.json(resultado);
   } catch (err) {
     console.error('Erro ao buscar mutirões:', err);
@@ -121,6 +137,12 @@ app.get('/api/mutiroes', async (req, res) => {
 app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
   try {
     const { organizacaoId } = req.params;
+    console.log(`Buscando mutirões da organização ${organizacaoId}...`);
+    
+    // Verificando se ID da organização foi fornecido
+    if (!organizacaoId) {
+      return res.status(400).json({ sucesso: false, erro: 'ID da organização não fornecido' });
+    }
     
     // Modificando para buscar mutirões através das ONGs vinculadas à organização
     const result = await query(
@@ -128,11 +150,13 @@ app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
               o.nome as nome_ong, 
               org.nome as nome_organizacao
        FROM mutiroes m
-       JOIN ongs o ON m.ong_id = o.ong_id
-       JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
+       LEFT JOIN ongs o ON m.ong_id = o.ong_id
+       LEFT JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
        WHERE org.organizacao_id = $1`,
       [organizacaoId]
     );
+    
+    console.log(`Encontrados ${result.rows.length} mutirões para organização ${organizacaoId}`);
     
     res.json({ sucesso: true, dados: { mutiroes: result.rows } });
   } catch (error) {

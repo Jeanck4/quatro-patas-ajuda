@@ -13,18 +13,30 @@ const MutiroesDisponiveis = () => {
   const [mutiroes, setMutiroes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
-  const carregarMutiroes = async () => {
+  const carregarMutiroes = async (shouldRetry = false) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Verificar se o servidor está online
+      const serverStatus = await api.isServerOnline();
+      if (!serverStatus) {
+        setError('Servidor backend offline. Execute: node src/api/server.js');
+        setLoading(false);
+        return;
+      }
+      
       const response = await api.buscarMutiroes();
       
       console.log("Resposta buscarMutiroes:", response);
       
       if (response.sucesso) {
         setMutiroes(response.dados?.mutiroes || []);
+        // Reset retry count on success
+        setRetryCount(0);
       } else {
         setError(response.erro || 'Erro desconhecido ao carregar mutirões');
         toast({
@@ -37,6 +49,14 @@ const MutiroesDisponiveis = () => {
       console.error('Erro ao carregar mutirões:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor';
       setError(errorMessage);
+      
+      // Auto-retry once if we got a network error
+      if (errorMessage === 'Failed to fetch' && !shouldRetry && retryCount < 2) {
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => carregarMutiroes(true), 2000);
+        return;
+      }
+      
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os mutirões disponíveis: ' + errorMessage,
@@ -62,7 +82,7 @@ const MutiroesDisponiveis = () => {
       <div className="container py-8">
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-3xl font-bold">Mutirões de Castração Disponíveis</h1>
-          <Button variant="outline" size="sm" onClick={carregarMutiroes}>
+          <Button variant="outline" size="sm" onClick={() => carregarMutiroes()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
@@ -84,6 +104,12 @@ const MutiroesDisponiveis = () => {
               <div className="text-xs">
                 {error === 'Failed to fetch' && 'Execute: node src/api/server.js'}
               </div>
+              <div className="mt-4">
+                <Button size="sm" variant="outline" onClick={() => carregarMutiroes()}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Tentar novamente
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         )}
@@ -99,7 +125,7 @@ const MutiroesDisponiveis = () => {
                 <CardHeader>
                   <CardTitle>Mutirão de Castração</CardTitle>
                   <CardDescription>
-                    Organizado por: {mutirao.nome_ong}
+                    Organizado por: {mutirao.nome_ong || 'ONG não especificada'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">

@@ -1,3 +1,4 @@
+
 /**
  * API service for making requests to our backend server
  */
@@ -29,6 +30,7 @@ export const isServerOnline = async (): Promise<boolean> => {
   }
   
   try {
+    console.log('Verificando conexão com o servidor...');
     const response = await fetch(`${API_URL}/teste-conexao`, { 
       signal: AbortSignal.timeout(3000) // timeout de 3 segundos
     });
@@ -36,6 +38,7 @@ export const isServerOnline = async (): Promise<boolean> => {
     
     serverOnline = data.sucesso === true;
     lastCheck = now;
+    console.log('Status do servidor:', serverOnline ? 'Online' : 'Offline');
     return serverOnline;
   } catch (error) {
     console.error('Erro ao verificar conexão com servidor:', error);
@@ -173,6 +176,16 @@ export const inserirOng = async (ong: any): Promise<ApiResponse<never>> => {
  */
 export const inserirMutirao = async (mutirao: any): Promise<ApiResponse<never>> => {
   try {
+    // Verificar se o servidor está online antes de fazer a requisição
+    if (!(await isServerOnline())) {
+      return {
+        sucesso: false,
+        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
+      };
+    }
+
+    console.log('Enviando dados de mutirão para cadastro:', mutirao);
+    
     const response = await fetch(`${API_URL}/mutiroes`, {
       method: 'POST',
       headers: {
@@ -180,6 +193,15 @@ export const inserirMutirao = async (mutirao: any): Promise<ApiResponse<never>> 
       },
       body: JSON.stringify(mutirao),
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro HTTP: ${response.status}. Detalhes:`, errorText);
+      return { 
+        sucesso: false, 
+        erro: `Erro HTTP ${response.status}: ${errorText || 'Sem detalhes'}`
+      };
+    }
     
     const data = await response.json();
     return data;
@@ -421,19 +443,29 @@ export const buscarAgendamentosTutor = async (tutorId: string): Promise<ApiRespo
  */
 export const buscarMutiroes = async (): Promise<ApiResponse<{mutiroes: any[]}>> => {
   try {
+    // Verificar se o servidor está online antes de fazer a requisição
+    if (!(await isServerOnline())) {
+      console.log('Servidor offline. Não é possível buscar mutirões.');
+      return {
+        sucesso: false,
+        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
+      };
+    }
+    
     console.log('Buscando mutirões disponíveis...');
     const response = await fetch(`${API_URL}/mutiroes`);
     
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Erro HTTP: ${response.status}. Detalhes:`, errorText);
       return {
         sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
+        erro: `Erro HTTP ${response.status}: ${errorText || response.statusText}`
       };
     }
     
     const data = await response.json();
-    console.log('Mutirões encontrados:', data);
+    console.log('Resposta da API de mutirões:', data);
     return data;
   } catch (error) {
     console.error('Erro ao buscar mutirões:', error);
@@ -449,19 +481,29 @@ export const buscarMutiroes = async (): Promise<ApiResponse<{mutiroes: any[]}>> 
  */
 export const buscarMutiroesOrganizacao = async (organizacaoId: string): Promise<ApiResponse<{mutiroes: any[]}>> => {
   try {
+    // Verificar se o servidor está online antes de fazer a requisição
+    if (!(await isServerOnline())) {
+      console.log('Servidor offline. Não é possível buscar mutirões da organização.');
+      return {
+        sucesso: false,
+        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
+      };
+    }
+    
     console.log(`Buscando mutirões da organização ${organizacaoId}...`);
     const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/mutiroes`);
     
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Erro HTTP: ${response.status}. Detalhes:`, errorText);
       return {
         sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
+        erro: `Erro HTTP ${response.status}: ${errorText || response.statusText}`
       };
     }
     
     const data = await response.json();
-    console.log(`Mutirões da organização ${organizacaoId} encontrados:`, data);
+    console.log(`Mutirões da organização ${organizacaoId}:`, data);
     return data;
   } catch (error) {
     console.error('Erro ao buscar mutirões da organização:', error);

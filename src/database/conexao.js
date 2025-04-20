@@ -1,3 +1,4 @@
+
 /**
  * PostgreSQL database connection module
  */
@@ -185,20 +186,34 @@ export const inserirMutirao = async (mutirao) => {
   }
 };
 
-// Função para buscar mutirões disponíveis
+// Função para buscar mutirões disponíveis - Atualizada para garantir o retorno correto
 export const buscarMutiroes = async () => {
   try {
     console.log('Buscando mutirões disponíveis...');
     const client = await pool.connect();
 
+    // Verificamos se conseguimos estabelecer a conexão
+    if (!client) {
+      throw new Error('Não foi possível conectar ao banco de dados');
+    }
+
+    // Query simplificada para debug
     const result = await client.query(
       `SELECT m.*, o.nome as nome_ong, org.nome as nome_organizacao 
        FROM mutiroes m 
-       JOIN ongs o ON m.ong_id = o.ong_id 
-       JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
-       WHERE m.data_mutirao >= CURRENT_DATE
+       LEFT JOIN ongs o ON m.ong_id = o.ong_id 
+       LEFT JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
        ORDER BY m.data_mutirao ASC`
     );
+
+    console.log(`Mutirões encontrados: ${result.rows.length}`);
+    
+    // Log detalhado dos resultados
+    if (result.rows.length === 0) {
+      console.log('Nenhum mutirão encontrado na consulta');
+    } else {
+      console.log('Primeiro mutirão:', JSON.stringify(result.rows[0]));
+    }
 
     client.release();
     return { sucesso: true, dados: { mutiroes: result.rows } };

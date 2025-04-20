@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Settings, LogOut, MapPin, Users, CalendarPlus } from 'lucide-react';
+import { Calendar, Settings, LogOut, MapPin, Users, CalendarPlus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import * as api from '@/services/api';
@@ -14,6 +16,7 @@ const DashboardOrganizacao = () => {
   const { toast } = useToast();
   const [mutiroes, setMutiroes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && userType === 'organizacao' && currentUser?.organizacao_id) {
@@ -24,7 +27,18 @@ const DashboardOrganizacao = () => {
   const loadMutiroes = async (organizacaoId: string) => {
     try {
       setLoading(true);
+      setError(null);
+      
       console.log(`Loading mutiroes for organization ID: ${organizacaoId}`);
+      
+      // Verificar se o servidor está online
+      const serverStatus = await api.isServerOnline();
+      if (!serverStatus) {
+        setError('Servidor backend offline. Execute: node src/api/server.js');
+        setLoading(false);
+        return;
+      }
+      
       const response = await api.buscarMutiroesOrganizacao(organizacaoId);
       
       if (response.sucesso) {
@@ -32,6 +46,7 @@ const DashboardOrganizacao = () => {
         setMutiroes(response.dados.mutiroes || []);
       } else {
         console.error("Erro ao carregar mutirões:", response.erro);
+        setError(response.erro || 'Erro desconhecido ao carregar mutirões');
         toast({
           title: 'Erro',
           description: 'Não foi possível carregar os mutirões: ' + (response.erro || 'Erro desconhecido'),
@@ -40,6 +55,7 @@ const DashboardOrganizacao = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar mutirões:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao carregar mutirões');
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os mutirões',
@@ -110,9 +126,27 @@ const DashboardOrganizacao = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Meus Mutirões de Castração</h2>
               <Button variant="outline" size="sm" onClick={handleRefreshMutiroes}>
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Atualizar Lista
               </Button>
             </div>
+            
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro de conexão</AlertTitle>
+                <AlertDescription>
+                  <div className="mb-2">
+                    {error === 'Failed to fetch'
+                      ? 'Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 e tente novamente.'
+                      : error}
+                  </div>
+                  <div className="text-xs">
+                    {error === 'Failed to fetch' && 'Execute: node src/api/server.js'}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
             
             {loading ? (
               <div className="flex justify-center items-center p-8">
@@ -166,7 +200,9 @@ const DashboardOrganizacao = () => {
             ) : (
               <div className="text-center py-12 bg-muted rounded-lg">
                 <Calendar className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                <p className="text-muted-foreground">Você ainda não cadastrou nenhum mutirão.</p>
+                <p className="text-muted-foreground">
+                  {error ? 'Não foi possível carregar os mutirões devido a um erro.' : 'Você ainda não cadastrou nenhum mutirão.'}
+                </p>
                 <Button className="mt-4" asChild>
                   <Link to="/cadastro/mutirao">
                     <CalendarPlus className="mr-2 h-4 w-4" />
