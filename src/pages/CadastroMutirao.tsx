@@ -23,6 +23,7 @@ import * as api from '@/services/api';
 
 // Schema para validação do formulário
 const mutiraoFormSchema = z.object({
+  nome: z.string().min(5, "O nome do mutirão deve ter pelo menos 5 caracteres."),
   data_mutirao: z.date({
     required_error: "A data do mutirão é obrigatória.",
   }),
@@ -32,7 +33,7 @@ const mutiraoFormSchema = z.object({
   cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP inválido. Formato: 00000-000 ou 00000000."),
   total_vagas: z.coerce.number().int().min(1, "O mutirão deve ter pelo menos 1 vaga."),
   informacoes_adicionais: z.string().optional(),
-  ong_id: z.number().int().min(1, "Selecione uma ONG")
+  ong_id: z.coerce.number().int().min(1, "Selecione uma ONG")
 });
 
 type MutiraoFormValues = z.infer<typeof mutiraoFormSchema>;
@@ -43,18 +44,21 @@ const CadastroMutirao = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ongs, setOngs] = useState<any[]>([]);
+  const [isLoadingOngs, setIsLoadingOngs] = useState(false);
   
   // Formulário usando react-hook-form
   const form = useForm<MutiraoFormValues>({
     resolver: zodResolver(mutiraoFormSchema),
     defaultValues: {
+      nome: '',
       endereco: '',
       cidade: '',
       estado: '',
       cep: '',
       total_vagas: 10,
       informacoes_adicionais: '',
-      ong_id: 1 // Valor padrão temporário
+      ong_id: undefined
     }
   });
 
@@ -64,8 +68,37 @@ const CadastroMutirao = () => {
       navigate('/login');
     } else if (userType !== 'organizacao') {
       navigate('/dashboard');
+    } else {
+      // Carregar as ONGs da organização
+      carregarOngsOrganizacao();
     }
   }, [isAuthenticated, navigate, userType]);
+
+  const carregarOngsOrganizacao = async () => {
+    if (!currentUser?.organizacao_id) return;
+
+    setIsLoadingOngs(true);
+    try {
+      const resultado = await api.buscarOngsOrganizacao(currentUser.organizacao_id);
+      if (resultado.sucesso && resultado.dados?.ongs) {
+        setOngs(resultado.dados.ongs);
+        
+        // Se houver ONGs, pré-selecione a primeira
+        if (resultado.dados.ongs.length > 0) {
+          form.setValue('ong_id', resultado.dados.ongs[0].ong_id);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar ONGs:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as ONGs. Verifique se o servidor está online.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingOngs(false);
+    }
+  };
 
   const onSubmit = async (data: MutiraoFormValues) => {
     try {
@@ -157,23 +190,54 @@ const CadastroMutirao = () => {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Mutirão</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Ex: Mutirão de Castração - Bairro Vila Nova" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="ong_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>ONG Responsável</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1" 
-                          placeholder="ID da ONG" 
-                          {...field} 
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          disabled={isLoadingOngs || ongs.length === 0}
+                          {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        />
+                          value={field.value}
+                        >
+                          {isLoadingOngs ? (
+                            <option>Carregando ONGs...</option>
+                          ) : ongs.length === 0 ? (
+                            <option>Nenhuma ONG cadastrada</option>
+                          ) : (
+                            ongs.map((ong) => (
+                              <option key={ong.ong_id} value={ong.ong_id}>
+                                {ong.nome}
+                              </option>
+                            ))
+                          )}
+                        </select>
                       </FormControl>
                       <FormMessage />
-                      <p className="text-xs text-muted-foreground">
-                        Digite 1 para ONG padrão (seleção de ONGs será implementada futuramente)
-                      </p>
+                      {ongs.length === 0 && !isLoadingOngs && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Você precisa cadastrar uma ONG primeiro para poder criar um mutirão
+                        </p>
+                      )}
                     </FormItem>
                   )}
                 />

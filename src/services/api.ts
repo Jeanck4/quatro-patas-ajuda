@@ -1,4 +1,3 @@
-
 /**
  * API service for making requests to our backend server
  */
@@ -182,6 +181,14 @@ export const inserirMutirao = async (mutirao: any): Promise<ApiResponse<never>> 
         sucesso: false,
         erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
       };
+    }
+
+    // Formatação correta da data se for um objeto Date
+    if (mutirao.data_mutirao instanceof Date) {
+      mutirao.data_mutirao = mutirao.data_mutirao.toISOString();
+    } else if (mutirao.data_mutirao && typeof mutirao.data_mutirao === 'object' && mutirao.data_mutirao._type === 'Date') {
+      // Se for um objeto serializado do tipo Date
+      mutirao.data_mutirao = new Date(mutirao.data_mutirao.value.iso).toISOString();
     }
 
     console.log('Enviando dados de mutirão para cadastro:', mutirao);
@@ -387,6 +394,14 @@ export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
  */
 export const buscarOngsOrganizacao = async (organizacaoId: string): Promise<ApiResponse<{ongs: any[]}>> => {
   try {
+    // Verificar se o servidor está online antes de fazer a requisição
+    if (!(await isServerOnline())) {
+      return {
+        sucesso: false,
+        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
+      };
+    }
+    
     console.log(`Buscando ONGs da organização ${organizacaoId}...`);
     const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/ongs`);
     

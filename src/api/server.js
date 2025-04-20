@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import { 
@@ -104,6 +103,7 @@ app.post('/api/mutiroes', async (req, res) => {
     // Processa o corpo da requisição
     const mutiraoData = {
       ...req.body,
+      nome: req.body.nome || `Mutirão de Castração - ${new Date(req.body.data_mutirao).toLocaleDateString()}`,
       vagas_disponiveis: req.body.vagas_disponiveis || req.body.total_vagas
     };
     

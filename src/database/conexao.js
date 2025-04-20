@@ -155,6 +155,7 @@ export const inserirMutirao = async (mutirao) => {
     console.log('Inserindo mutirão no PostgreSQL:', mutirao);
     const client = await pool.connect();
 
+    // Verificar se a ONG existe antes de tentar inserir o mutirão
     const ongCheck = await client.query('SELECT ong_id FROM ongs WHERE ong_id = $1', [mutirao.ong_id]);
     
     if (ongCheck.rows.length === 0) {
@@ -164,13 +165,14 @@ export const inserirMutirao = async (mutirao) => {
     
     const result = await client.query(
       `INSERT INTO mutiroes (
-        ong_id, data_mutirao, total_vagas, vagas_disponiveis, 
+        ong_id, nome, data_mutirao, total_vagas, vagas_disponiveis, 
         endereco, cidade, estado, informacoes_adicionais
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8
+        $1, $2, $3, $4, $5, $6, $7, $8, $9
       ) RETURNING mutirao_id`,
       [
         mutirao.ong_id, 
+        mutirao.nome || `Mutirão de Castração - ${new Date(mutirao.data_mutirao).toLocaleDateString()}`,
         mutirao.data_mutirao, 
         mutirao.total_vagas, 
         mutirao.vagas_disponiveis,
