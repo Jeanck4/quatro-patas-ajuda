@@ -1,535 +1,355 @@
-/**
- * API service for making requests to our backend server
- */
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
+// URL base da API
 const API_URL = 'http://localhost:3001/api';
 
-// Interface para as respostas da API
-interface ApiResponse<T = any> {
-  sucesso: boolean;
-  id?: string;
-  erro?: string;
-  dados?: T;
-}
-
-// Estado de conexão para evitar múltiplas tentativas quando o servidor está offline
-let serverOnline: boolean | null = null;
-let lastCheck: number = 0;
-const CHECK_INTERVAL = 5000; // 5 segundos entre verificações
-
-/**
- * Verifica se o servidor está online
- */
+// Função para verificar se o servidor está online
 export const isServerOnline = async (): Promise<boolean> => {
-  const now = Date.now();
-  
-  // Se já verificamos recentemente, retorna o último estado conhecido
-  if (serverOnline !== null && (now - lastCheck) < CHECK_INTERVAL) {
-    return serverOnline;
-  }
-  
   try {
-    console.log('Verificando conexão com o servidor...');
-    const response = await fetch(`${API_URL}/teste-conexao`, { 
-      signal: AbortSignal.timeout(3000) // timeout de 3 segundos
-    });
-    const data = await response.json();
-    
-    serverOnline = data.sucesso === true;
-    lastCheck = now;
-    console.log('Status do servidor:', serverOnline ? 'Online' : 'Offline');
-    return serverOnline;
+    const response = await fetch(`${API_URL}/teste-conexao`);
+    return response.ok;
   } catch (error) {
-    console.error('Erro ao verificar conexão com servidor:', error);
-    serverOnline = false;
-    lastCheck = now;
+    console.error('Erro ao verificar status do servidor:', error);
     return false;
   }
 };
 
-/**
- * Testa a conexão com o servidor e banco de dados
- */
-export const testarConexao = async (): Promise<ApiResponse<{agora: string}>> => {
-  try {
-    const response = await fetch(`${API_URL}/teste-conexao`);
-    const data = await response.json();
-    
-    // Atualiza o estado de conexão
-    serverOnline = data.sucesso === true;
-    lastCheck = Date.now();
-    
-    return data;
-  } catch (error) {
-    console.error('Erro ao testar conexão:', error);
-    
-    // Atualiza o estado de conexão
-    serverOnline = false;
-    lastCheck = Date.now();
-    
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro desconhecido ao conectar ao servidor' 
-    };
-  }
+// Função para formatar a data
+export const formatDate = (date: Date | null): string => {
+  if (!date) return 'Data não informada';
+  return format(date, 'dd/MM/yyyy', { locale: ptBR });
 };
 
-/**
- * Insere um tutor no banco de dados
- */
-export const inserirTutor = async (tutor: any): Promise<ApiResponse<never>> => {
+// Função para cadastrar tutor
+export const cadastrarTutor = async (tutorData: any) => {
   try {
     const response = await fetch(`${API_URL}/tutores`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(tutor),
+      body: JSON.stringify(tutorData)
     });
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao inserir tutor:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao salvar dados do tutor' 
-    };
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao cadastrar tutor');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao cadastrar tutor:', error);
+    throw error;
   }
 };
 
-/**
- * Insere um pet no banco de dados
- */
-export const inserirPet = async (pet: any, tutorId: string): Promise<ApiResponse<never>> => {
+// Função para cadastrar pet
+export const cadastrarPet = async (petData: any, tutorId: string) => {
   try {
     const response = await fetch(`${API_URL}/pets`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ pet, tutorId }),
+      body: JSON.stringify({ pet: petData, tutorId })
     });
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao inserir pet:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao salvar dados do pet' 
-    };
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao cadastrar pet');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao cadastrar pet:', error);
+    throw error;
   }
 };
 
-/**
- * Insere uma organização no banco de dados
- */
-export const inserirOrganizacao = async (organizacao: any): Promise<ApiResponse<never>> => {
+// Função para cadastrar organização
+export const cadastrarOrganizacao = async (organizacaoData: any) => {
   try {
     const response = await fetch(`${API_URL}/organizacoes`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(organizacao),
+      body: JSON.stringify(organizacaoData)
     });
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao inserir organização:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao salvar dados da organização' 
-    };
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao cadastrar organização');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao cadastrar organização:', error);
+    throw error;
   }
 };
 
-/**
- * Insere uma ONG no banco de dados
- */
-export const inserirOng = async (ong: any): Promise<ApiResponse<never>> => {
+// Função para cadastrar ONG
+export const cadastrarOng = async (ongData: any) => {
   try {
     const response = await fetch(`${API_URL}/ongs`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(ong),
+      body: JSON.stringify(ongData)
     });
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao inserir ONG:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao salvar dados da ONG' 
-    };
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao cadastrar ONG');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao cadastrar ONG:', error);
+    throw error;
   }
 };
 
-/**
- * Insere um mutirão no banco de dados
- */
-export const inserirMutirao = async (mutirao: any): Promise<ApiResponse<never>> => {
+// Função para inserir mutirão
+export const inserirMutirao = async (mutiraoData: any) => {
   try {
-    // Verificar se o servidor está online antes de fazer a requisição
-    if (!(await isServerOnline())) {
-      return {
-        sucesso: false,
-        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
-      };
+    console.log("Enviando dados de mutirão para cadastro:", mutiraoData);
+    
+    // Make sure organizacao_id is included in the request
+    if (!mutiraoData.organizacao_id) {
+      throw new Error('ID da organização não fornecido');
     }
-
-    // Formatação correta da data se for um objeto Date
-    if (mutirao.data_mutirao instanceof Date) {
-      mutirao.data_mutirao = mutirao.data_mutirao.toISOString();
-    } else if (mutirao.data_mutirao && typeof mutirao.data_mutirao === 'object' && mutirao.data_mutirao._type === 'Date') {
-      // Se for um objeto serializado do tipo Date
-      mutirao.data_mutirao = new Date(mutirao.data_mutirao.value.iso).toISOString();
-    }
-
-    console.log('Enviando dados de mutirão para cadastro:', mutirao);
     
     const response = await fetch(`${API_URL}/mutiroes`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(mutirao),
+      body: JSON.stringify(mutiraoData)
     });
-    
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro HTTP: ${response.status}. Detalhes:`, errorText);
-      return { 
-        sucesso: false, 
-        erro: `Erro HTTP ${response.status}: ${errorText || 'Sem detalhes'}`
-      };
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao cadastrar mutirão');
     }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao inserir mutirão:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao salvar dados do mutirão' 
-    };
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao cadastrar mutirão:', error);
+    throw error;
   }
 };
 
-/**
- * Realiza login de tutores
- */
-export const loginTutor = async (email: string, senha: string): Promise<ApiResponse<{tutor: any}>> => {
+// Função para buscar mutirões
+export const buscarMutiroes = async () => {
+  try {
+    const response = await fetch(`${API_URL}/mutiroes`);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar mutirões');
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao buscar mutirões:', error);
+    throw error;
+  }
+};
+
+// Função para buscar mutirões de uma organização
+export const buscarMutiroesPorOrganizacao = async (organizacaoId: string) => {
+  try {
+    const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/mutiroes`);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar mutirões da organização');
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao buscar mutirões da organização:', error);
+    throw error;
+  }
+};
+
+// Função para buscar agendamentos do tutor
+export const buscarAgendamentosTutor = async (tutorId: string) => {
+  try {
+    const response = await fetch(`${API_URL}/tutores/${tutorId}/agendamentos`);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar agendamentos do tutor');
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao buscar agendamentos do tutor:', error);
+    throw error;
+  }
+};
+
+// Função para criar agendamento
+export const criarAgendamento = async (agendamentoData: any) => {
+  try {
+    const response = await fetch(`${API_URL}/agendamentos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(agendamentoData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao criar agendamento');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao criar agendamento:', error);
+    throw error;
+  }
+};
+
+// Função para realizar login do tutor
+export const loginTutor = async (email: string, senha: string) => {
   try {
     const response = await fetch(`${API_URL}/login/tutor`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email, senha }),
+      body: JSON.stringify({ email, senha })
     });
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao fazer login como tutor:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao fazer login' 
-    };
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao realizar login');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao realizar login:', error);
+    throw error;
   }
 };
 
-/**
- * Realiza login de organizações
- */
-export const loginOrganizacao = async (email: string, senha: string): Promise<ApiResponse<{organizacao: any}>> => {
+// Função para realizar login da organização
+export const loginOrganizacao = async (email: string, senha: string) => {
   try {
     const response = await fetch(`${API_URL}/login/organizacao`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email, senha }),
+      body: JSON.stringify({ email, senha })
     });
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao fazer login como organização:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao fazer login' 
-    };
-  }
-};
 
-/**
- * Busca os pets de um tutor
- */
-export const buscarPetsTutor = async (tutorId: string): Promise<ApiResponse<{pets: any[]}>> => {
-  try {
-    console.log(`Fetching pets for tutor ${tutorId} from ${API_URL}/tutores/${tutorId}/pets`);
-    const response = await fetch(`${API_URL}/tutores/${tutorId}/pets`);
-    
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
-      return {
-        sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
-      };
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao realizar login');
     }
-    
-    const data = await response.json();
-    console.log("API response data:", data);
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar pets:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao buscar pets' 
-    };
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao realizar login:', error);
+    throw error;
   }
 };
 
-/**
- * Atualiza um pet
- */
-export const atualizarPet = async (petId: string, pet: any): Promise<ApiResponse<any>> => {
+// Função para buscar pets do tutor
+export const buscarPetsDoTutor = async (tutorId: string) => {
   try {
-    console.log(`Updating pet ${petId} with data:`, pet);
+    const response = await fetch(`${API_URL}/tutores/${tutorId}/pets`);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar pets do tutor');
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao buscar pets do tutor:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar pet
+export const atualizarPet = async (petId: string, petData: any) => {
+  try {
     const response = await fetch(`${API_URL}/pets/${petId}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(pet),
+      body: JSON.stringify(petData)
     });
-    
+
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
-      return {
-        sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
-      };
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao atualizar pet');
     }
-    
-    const data = await response.json();
-    console.log("API update response:", data);
-    return data;
-  } catch (error) {
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
     console.error('Erro ao atualizar pet:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao atualizar pet' 
-    };
+    throw error;
   }
 };
 
-/**
- * Remove um pet
- */
-export const removerPet = async (petId: string): Promise<ApiResponse<any>> => {
+// Função para deletar pet
+export const deletarPet = async (petId: string) => {
   try {
-    console.log(`Removing pet ${petId}`);
     const response = await fetch(`${API_URL}/pets/${petId}`, {
-      method: 'DELETE',
+      method: 'DELETE'
     });
-    
+
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
-      return {
-        sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
-      };
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao deletar pet');
     }
-    
-    const data = await response.json();
-    console.log("API delete response:", data);
-    return data;
-  } catch (error) {
-    console.error('Erro ao remover pet:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao remover pet' 
-    };
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao deletar pet:', error);
+    throw error;
   }
 };
 
-/**
- * Busca todas as ONGs cadastradas
- */
-export const buscarOngs = async (): Promise<ApiResponse<{ongs: any[]}>> => {
+// Função para buscar todas as ONGs
+export const buscarOngs = async () => {
   try {
-    console.log('Buscando ONGs do banco de dados...');
     const response = await fetch(`${API_URL}/ongs`);
-    
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
-      return {
-        sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
-      };
+      throw new Error('Erro ao buscar ONGs');
     }
-    
-    const data = await response.json();
-    console.log('ONGs encontradas:', data);
-    return data;
-  } catch (error) {
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
     console.error('Erro ao buscar ONGs:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao buscar ONGs' 
-    };
+    throw error;
   }
 };
 
-/**
- * Busca as ONGs de uma organização específica
- */
-export const buscarOngsOrganizacao = async (organizacaoId: string): Promise<ApiResponse<{ongs: any[]}>> => {
+// Função para buscar ONGs de uma organização
+export const buscarOngsPorOrganizacao = async (organizacaoId: string) => {
   try {
-    // Verificar se o servidor está online antes de fazer a requisição
-    if (!(await isServerOnline())) {
-      return {
-        sucesso: false,
-        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
-      };
-    }
-    
-    console.log(`Buscando ONGs da organização ${organizacaoId}...`);
     const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/ongs`);
-    
     if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
-      return {
-        sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
-      };
+      throw new Error('Erro ao buscar ONGs da organização');
     }
-    
-    const data = await response.json();
-    console.log(`ONGs da organização ${organizacaoId} encontradas:`, data);
-    return data;
-  } catch (error) {
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
     console.error('Erro ao buscar ONGs da organização:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao buscar ONGs da organização' 
-    };
+    throw error;
   }
 };
-
-/**
- * Busca os agendamentos de um tutor
- */
-export const buscarAgendamentosTutor = async (tutorId: string): Promise<ApiResponse<{agendamentos: any[]}>> => {
-  try {
-    console.log(`Buscando agendamentos para tutor ${tutorId}...`);
-    const response = await fetch(`${API_URL}/tutores/${tutorId}/agendamentos`);
-    
-    if (!response.ok) {
-      console.error(`API response not OK: ${response.status} ${response.statusText}`);
-      return {
-        sucesso: false,
-        erro: `Erro na API: ${response.status} ${response.statusText}`
-      };
-    }
-    
-    const data = await response.json();
-    console.log('Agendamentos encontrados:', data);
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar agendamentos:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao buscar agendamentos' 
-    };
-  }
-};
-
-/**
- * Busca todos os mutirões disponíveis
- */
-export const buscarMutiroes = async (): Promise<ApiResponse<{mutiroes: any[]}>> => {
-  try {
-    // Verificar se o servidor está online antes de fazer a requisição
-    if (!(await isServerOnline())) {
-      console.log('Servidor offline. Não é possível buscar mutirões.');
-      return {
-        sucesso: false,
-        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
-      };
-    }
-    
-    console.log('Buscando mutirões disponíveis...');
-    const response = await fetch(`${API_URL}/mutiroes`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro HTTP: ${response.status}. Detalhes:`, errorText);
-      return {
-        sucesso: false,
-        erro: `Erro HTTP ${response.status}: ${errorText || response.statusText}`
-      };
-    }
-    
-    const data = await response.json();
-    console.log('Resposta da API de mutirões:', data);
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar mutirões:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao buscar mutirões' 
-    };
-  }
-};
-
-/**
- * Busca os mutirões de uma organização específica
- */
-export const buscarMutiroesOrganizacao = async (organizacaoId: string): Promise<ApiResponse<{mutiroes: any[]}>> => {
-  try {
-    // Verificar se o servidor está online antes de fazer a requisição
-    if (!(await isServerOnline())) {
-      console.log('Servidor offline. Não é possível buscar mutirões da organização.');
-      return {
-        sucesso: false,
-        erro: 'Servidor offline. Verifique se o servidor backend está rodando.'
-      };
-    }
-    
-    console.log(`Buscando mutirões da organização ${organizacaoId}...`);
-    const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/mutiroes`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro HTTP: ${response.status}. Detalhes:`, errorText);
-      return {
-        sucesso: false,
-        erro: `Erro HTTP ${response.status}: ${errorText || response.statusText}`
-      };
-    }
-    
-    const data = await response.json();
-    console.log(`Mutirões da organização ${organizacaoId}:`, data);
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar mutirões da organização:', error);
-    return { 
-      sucesso: false, 
-      erro: error instanceof Error ? error.message : 'Erro ao buscar mutirões da organização' 
-    };
-  }
-};
-
-// The following functions are deprecated and should be replaced with the ones above
-export const getPets = buscarPetsTutor;
-export const updatePet = atualizarPet;
-export const removePet = removerPet;

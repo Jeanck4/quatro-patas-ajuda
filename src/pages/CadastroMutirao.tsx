@@ -85,9 +85,10 @@ const CadastroMutirao = () => {
         return;
       }
 
-      // Preparar os dados para envio
+      // Preparar os dados para envio, incluindo o ID da organização
       const mutiraoData = {
         ...data,
+        organizacao_id: currentUser.organizacao_id, // Incluir o ID da organização atual
         vagas_disponiveis: data.total_vagas, // Inicialmente todas as vagas estão disponíveis
         ong_id: null // Será preenchido no backend
       };
