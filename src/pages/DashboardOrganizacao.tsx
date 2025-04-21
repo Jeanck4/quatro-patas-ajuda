@@ -39,7 +39,8 @@ const DashboardOrganizacao = () => {
         return;
       }
       
-      const response = await api.buscarMutiroesOrganizacao(organizacaoId);
+      // Usando a função buscarMutiroesPorOrganizacao
+      const response = await api.buscarMutiroesPorOrganizacao(organizacaoId);
       
       if (response.sucesso) {
         console.log("Mutirões carregados com sucesso:", response.dados.mutiroes);

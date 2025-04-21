@@ -34,7 +34,7 @@ const Dashboard = () => {
       setPetsLoading(true);
       console.log("Fetching pets for tutor ID:", tutorId);
       
-      const response = await api.buscarPetsTutor(tutorId);
+      const response = await api.buscarPetsDoTutor(tutorId);
       
       console.log("API response for pets:", response);
       
@@ -109,7 +109,7 @@ const Dashboard = () => {
 
   const handleDeletePet = async (petId: string) => {
     try {
-      const response = await api.removerPet(petId);
+      const response = await api.deletarPet(petId);
       if (response.sucesso) {
         toast({
           title: 'Sucesso',

@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -5,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 const API_URL = 'http://localhost:3001/api';
 
 // Função para verificar se o servidor está online
-export const isServerOnline = async (): Promise<boolean> => {
+export const testarConexao = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${API_URL}/teste-conexao`);
     return response.ok;
@@ -22,7 +23,7 @@ export const formatDate = (date: Date | null): string => {
 };
 
 // Função para cadastrar tutor
-export const cadastrarTutor = async (tutorData: any) => {
+export const inserirTutor = async (tutorData: any) => {
   try {
     const response = await fetch(`${API_URL}/tutores`, {
       method: 'POST',
@@ -46,7 +47,7 @@ export const cadastrarTutor = async (tutorData: any) => {
 };
 
 // Função para cadastrar pet
-export const cadastrarPet = async (petData: any, tutorId: string) => {
+export const inserirPet = async (petData: any, tutorId: string) => {
   try {
     const response = await fetch(`${API_URL}/pets`, {
       method: 'POST',
@@ -70,7 +71,7 @@ export const cadastrarPet = async (petData: any, tutorId: string) => {
 };
 
 // Função para cadastrar organização
-export const cadastrarOrganizacao = async (organizacaoData: any) => {
+export const inserirOrganizacao = async (organizacaoData: any) => {
   try {
     const response = await fetch(`${API_URL}/organizacoes`, {
       method: 'POST',
@@ -94,7 +95,7 @@ export const cadastrarOrganizacao = async (organizacaoData: any) => {
 };
 
 // Função para cadastrar ONG
-export const cadastrarOng = async (ongData: any) => {
+export const inserirOng = async (ongData: any) => {
   try {
     const response = await fetch(`${API_URL}/ongs`, {
       method: 'POST',
@@ -163,7 +164,7 @@ export const buscarMutiroes = async () => {
   }
 };
 
-// Função para buscar mutirões de uma organização
+// Função para buscar mutirões de uma organização (corrigido o nome)
 export const buscarMutiroesPorOrganizacao = async (organizacaoId: string) => {
   try {
     const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/mutiroes`);
@@ -177,6 +178,9 @@ export const buscarMutiroesPorOrganizacao = async (organizacaoId: string) => {
     throw error;
   }
 };
+
+// Alias para compatibilidade com código existente
+export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
 
 // Função para buscar agendamentos do tutor
 export const buscarAgendamentosTutor = async (tutorId: string) => {
@@ -265,7 +269,7 @@ export const loginOrganizacao = async (email: string, senha: string) => {
   }
 };
 
-// Função para buscar pets do tutor
+// Função para buscar pets do tutor (renomeado para consistência)
 export const buscarPetsDoTutor = async (tutorId: string) => {
   try {
     const response = await fetch(`${API_URL}/tutores/${tutorId}/pets`);
@@ -279,6 +283,9 @@ export const buscarPetsDoTutor = async (tutorId: string) => {
     throw error;
   }
 };
+
+// Alias para compatibilidade com código existente
+export const buscarPetsTutor = buscarPetsDoTutor;
 
 // Função para atualizar pet
 export const atualizarPet = async (petId: string, petData: any) => {
@@ -323,6 +330,9 @@ export const deletarPet = async (petId: string) => {
     throw error;
   }
 };
+
+// Alias para compatibilidade com código existente
+export const removerPet = deletarPet;
 
 // Função para buscar todas as ONGs
 export const buscarOngs = async () => {
