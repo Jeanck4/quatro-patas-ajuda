@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import * as api from '@/services/api';
 const CadastroOrganizacao = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -32,7 +31,7 @@ const CadastroOrganizacao = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverConectado, setServerConectado] = useState(false);
-  
+
   useEffect(() => {
     const verificarConexao = async () => {
       try {
@@ -43,17 +42,17 @@ const CadastroOrganizacao = () => {
         setServerConectado(false);
       }
     };
-    
+
     verificarConexao();
   }, []);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -61,56 +60,56 @@ const CadastroOrganizacao = () => {
       }));
     }
   };
-  
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
     if (!formData.email.trim()) {
       newErrors.email = 'Email é obrigatório';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
-    
+
     if (!formData.senha.trim()) {
       newErrors.senha = 'Senha é obrigatória';
     } else if (formData.senha.length < 6) {
       newErrors.senha = 'Senha deve ter pelo menos 6 caracteres';
     }
-    
+
     if (formData.senha !== formData.confirmarSenha) {
       newErrors.confirmarSenha = 'As senhas não correspondem';
     }
-    
+
     if (!formData.telefone.trim()) newErrors.telefone = 'Telefone é obrigatório';
     if (!formData.cnpj.trim()) newErrors.cnpj = 'CNPJ é obrigatório';
     if (!formData.endereco.trim()) newErrors.endereco = 'Endereço é obrigatório';
     if (!formData.cidade.trim()) newErrors.cidade = 'Cidade é obrigatória';
     if (!formData.estado.trim()) newErrors.estado = 'Estado é obrigatório';
     if (!formData.cep.trim()) newErrors.cep = 'CEP é obrigatório';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       setLoading(true);
       try {
         console.log('Dados da organização sendo enviados para o banco:', formData);
-        
+
         const resultado = await api.inserirOrganizacao(formData);
-        
+
         if (resultado.sucesso) {
           localStorage.setItem('organizacaoId', resultado.id || '');
-          
+
           toast({
             title: "Cadastro realizado!",
             description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
           });
-          
+
           setTimeout(() => {
             navigate('/login');
           }, 2000);
@@ -133,7 +132,7 @@ const CadastroOrganizacao = () => {
       }
     }
   };
-  
+
   return (
     <MainLayout>
       <div className="container py-10">
@@ -144,13 +143,13 @@ const CadastroOrganizacao = () => {
               <div>
                 <h3 className="font-bold text-yellow-700">Atenção: Servidor indisponível</h3>
                 <p className="text-sm text-yellow-700">
-                  Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 
+                  Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001
                   e tente novamente. Execute: <code>node src/api/server.js</code> no terminal.
                 </p>
               </div>
             </div>
           )}
-          
+
           {serverConectado && (
             <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
               <Server className="h-5 w-5 text-green-600 mr-2" />
@@ -162,7 +161,7 @@ const CadastroOrganizacao = () => {
               </div>
             </div>
           )}
-          
+
           <Card className="border shadow-md">
             <CardHeader>
               <CardTitle className="text-2xl text-primary">Cadastro de Organização</CardTitle>
@@ -170,12 +169,12 @@ const CadastroOrganizacao = () => {
                 Preencha os dados da sua organização para se cadastrar na plataforma.
               </CardDescription>
             </CardHeader>
-            
+
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Informações Básicas</h3>
-                  
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="nome">Nome da Organização</Label>
@@ -189,7 +188,7 @@ const CadastroOrganizacao = () => {
                       />
                       {errors.nome && <p className="text-sm text-red-500">{errors.nome}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input
@@ -204,7 +203,7 @@ const CadastroOrganizacao = () => {
                       {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                     </div>
                   </div>
-                  
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="senha">Senha</Label>
@@ -219,7 +218,7 @@ const CadastroOrganizacao = () => {
                       />
                       {errors.senha && <p className="text-sm text-red-500">{errors.senha}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="confirmarSenha">Confirmar Senha</Label>
                       <Input
@@ -235,10 +234,10 @@ const CadastroOrganizacao = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Dados da Organização</h3>
-                  
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="telefone">Telefone</Label>
@@ -252,7 +251,7 @@ const CadastroOrganizacao = () => {
                       />
                       {errors.telefone && <p className="text-sm text-red-500">{errors.telefone}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="cnpj">CNPJ</Label>
                       <Input
@@ -266,7 +265,7 @@ const CadastroOrganizacao = () => {
                       {errors.cnpj && <p className="text-sm text-red-500">{errors.cnpj}</p>}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="endereco">Endereço</Label>
                     <Input
@@ -279,7 +278,7 @@ const CadastroOrganizacao = () => {
                     />
                     {errors.endereco && <p className="text-sm text-red-500">{errors.endereco}</p>}
                   </div>
-                  
+
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="cidade">Cidade</Label>
@@ -293,7 +292,7 @@ const CadastroOrganizacao = () => {
                       />
                       {errors.cidade && <p className="text-sm text-red-500">{errors.cidade}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="estado">Estado</Label>
                       <Input
@@ -306,7 +305,7 @@ const CadastroOrganizacao = () => {
                       />
                       {errors.estado && <p className="text-sm text-red-500">{errors.estado}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="cep">CEP</Label>
                       <Input
@@ -320,7 +319,7 @@ const CadastroOrganizacao = () => {
                       {errors.cep && <p className="text-sm text-red-500">{errors.cep}</p>}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="descricao">Descrição da Organização</Label>
                     <Textarea
@@ -334,7 +333,7 @@ const CadastroOrganizacao = () => {
                   </div>
                 </div>
               </CardContent>
-              
+
               <CardFooter className="flex flex-col md:flex-row gap-4 md:justify-between">
                 <Button type="button" variant="outline" onClick={() => navigate('/')}>
                   Cancelar

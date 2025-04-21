@@ -31,7 +31,6 @@ const CadastroTutor = () => {
   const [serverConectado, setServerConectado] = useState(false);
   const [conexaoTestada, setConexaoTestada] = useState(false);
   
-  // Teste automaticamente a conexão ao carregar o componente
   useEffect(() => {
     const verificarConexao = async () => {
       try {

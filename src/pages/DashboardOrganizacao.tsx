@@ -32,8 +32,8 @@ const DashboardOrganizacao = () => {
       console.log(`Loading mutiroes for organization ID: ${organizacaoId}`);
       
       // Verificar se o servidor está online
-      const serverStatus = await api.isServerOnline();
-      if (!serverStatus) {
+      const serverStatus = await api.testarConexao();
+      if (!serverStatus.sucesso) {
         setError('Servidor backend offline. Execute: node src/api/server.js');
         setLoading(false);
         return;

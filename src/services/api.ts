@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -6,15 +5,33 @@ import { ptBR } from 'date-fns/locale';
 const API_URL = 'http://localhost:3001/api';
 
 // Função para verificar se o servidor está online
-export const testarConexao = async (): Promise<boolean> => {
+export const testarConexao = async () => {
   try {
     const response = await fetch(`${API_URL}/teste-conexao`);
-    return response.ok;
+    
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        sucesso: true,
+        dados: data
+      };
+    }
+    
+    return {
+      sucesso: false,
+      erro: 'Servidor indisponível'
+    };
   } catch (error) {
     console.error('Erro ao verificar status do servidor:', error);
-    return false;
+    return {
+      sucesso: false,
+      erro: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
   }
 };
+
+// Alias para compatibilidade com código existente
+export const isServerOnline = testarConexao;
 
 // Função para formatar a data
 export const formatDate = (date: Date | null): string => {
