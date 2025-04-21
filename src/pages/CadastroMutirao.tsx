@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Building2, AlertCircle } from 'lucide-react';
+import { CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,7 @@ import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import * as api from '@/services/api';
 
-// Schema para validação do formulário
+// Schema para validação do formulário (atualizado)
 const mutiraoFormSchema = z.object({
   nome: z.string().min(5, "O nome do mutirão deve ter pelo menos 5 caracteres."),
   data_mutirao: z.date({
@@ -30,10 +30,8 @@ const mutiraoFormSchema = z.object({
   endereco: z.string().min(5, "O endereço deve ter pelo menos 5 caracteres."),
   cidade: z.string().min(2, "A cidade deve ter pelo menos 2 caracteres."),
   estado: z.string().length(2, "O estado deve ter 2 caracteres.").toUpperCase(),
-  cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP inválido. Formato: 00000-000 ou 00000000."),
   total_vagas: z.coerce.number().int().min(1, "O mutirão deve ter pelo menos 1 vaga."),
-  informacoes_adicionais: z.string().optional(),
-  ong_id: z.coerce.number().int().min(1, "Selecione uma ONG")
+  informacoes_adicionais: z.string().optional()
 });
 
 type MutiraoFormValues = z.infer<typeof mutiraoFormSchema>;
@@ -44,8 +42,6 @@ const CadastroMutirao = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ongs, setOngs] = useState<any[]>([]);
-  const [isLoadingOngs, setIsLoadingOngs] = useState(false);
   
   // Formulário usando react-hook-form
   const form = useForm<MutiraoFormValues>({
@@ -55,50 +51,18 @@ const CadastroMutirao = () => {
       endereco: '',
       cidade: '',
       estado: '',
-      cep: '',
       total_vagas: 10,
-      informacoes_adicionais: '',
-      ong_id: undefined
+      informacoes_adicionais: ''
     }
   });
 
   useEffect(() => {
-    // Verificar se o usuário está logado e é uma organização
     if (!isAuthenticated) {
       navigate('/login');
     } else if (userType !== 'organizacao') {
       navigate('/dashboard');
-    } else {
-      // Carregar as ONGs da organização
-      carregarOngsOrganizacao();
     }
   }, [isAuthenticated, navigate, userType]);
-
-  const carregarOngsOrganizacao = async () => {
-    if (!currentUser?.organizacao_id) return;
-
-    setIsLoadingOngs(true);
-    try {
-      const resultado = await api.buscarOngsOrganizacao(currentUser.organizacao_id);
-      if (resultado.sucesso && resultado.dados?.ongs) {
-        setOngs(resultado.dados.ongs);
-        
-        // Se houver ONGs, pré-selecione a primeira
-        if (resultado.dados.ongs.length > 0) {
-          form.setValue('ong_id', resultado.dados.ongs[0].ong_id);
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao carregar ONGs:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as ONGs. Verifique se o servidor está online.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingOngs(false);
-    }
-  };
 
   const onSubmit = async (data: MutiraoFormValues) => {
     try {
@@ -118,15 +82,14 @@ const CadastroMutirao = () => {
       const serverStatus = await api.isServerOnline();
       if (!serverStatus) {
         setError('Servidor backend offline. Execute: node src/api/server.js');
-        setIsSubmitting(false);
         return;
       }
 
       // Preparar os dados para envio
       const mutiraoData = {
         ...data,
-        organizacao_id: currentUser.organizacao_id,
         vagas_disponiveis: data.total_vagas, // Inicialmente todas as vagas estão disponíveis
+        ong_id: null // Será preenchido no backend
       };
 
       console.log("Dados do mutirão para cadastro:", mutiraoData);
@@ -170,11 +133,7 @@ const CadastroMutirao = () => {
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Erro</AlertTitle>
-            <AlertDescription>
-              {error === 'Failed to fetch'
-                ? 'Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 e tente novamente.'
-                : error}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
@@ -201,43 +160,6 @@ const CadastroMutirao = () => {
                         />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="ong_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ONG Responsável</FormLabel>
-                      <FormControl>
-                        <select
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          disabled={isLoadingOngs || ongs.length === 0}
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
-                          value={field.value}
-                        >
-                          {isLoadingOngs ? (
-                            <option>Carregando ONGs...</option>
-                          ) : ongs.length === 0 ? (
-                            <option>Nenhuma ONG cadastrada</option>
-                          ) : (
-                            ongs.map((ong) => (
-                              <option key={ong.ong_id} value={ong.ong_id}>
-                                {ong.nome}
-                              </option>
-                            ))
-                          )}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                      {ongs.length === 0 && !isLoadingOngs && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Você precisa cadastrar uma ONG primeiro para poder criar um mutirão
-                        </p>
-                      )}
                     </FormItem>
                   )}
                 />
@@ -312,7 +234,7 @@ const CadastroMutirao = () => {
                   )}
                 />
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="cidade"
@@ -335,20 +257,6 @@ const CadastroMutirao = () => {
                         <FormLabel>Estado</FormLabel>
                         <FormControl>
                           <Input placeholder="UF" maxLength={2} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="cep"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CEP</FormLabel>
-                        <FormControl>
-                          <Input placeholder="00000-000" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

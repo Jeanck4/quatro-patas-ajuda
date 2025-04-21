@@ -149,7 +149,7 @@ export const inserirOng = async (ong) => {
   }
 };
 
-// Função para inserir um mutirão (antigo campanha)
+// Função para inserir um mutirão (atualizada)
 export const inserirMutirao = async (mutirao) => {
   try {
     console.log('Inserindo mutirão no PostgreSQL:', mutirao);
@@ -171,8 +171,8 @@ export const inserirMutirao = async (mutirao) => {
         $1, $2, $3, $4, $5, $6, $7, $8, $9
       ) RETURNING mutirao_id`,
       [
-        mutirao.ong_id, 
-        mutirao.nome || `Mutirão de Castração - ${new Date(mutirao.data_mutirao).toLocaleDateString()}`,
+        mutirao.ong_id,
+        mutirao.nome,
         mutirao.data_mutirao, 
         mutirao.total_vagas, 
         mutirao.vagas_disponiveis,

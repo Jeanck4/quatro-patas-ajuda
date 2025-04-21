@@ -95,15 +95,29 @@ app.post('/api/mutiroes', async (req, res) => {
   try {
     console.log('Recebendo requisição para cadastrar mutirão:', req.body);
     
-    if (!req.body.ong_id) {
-      console.error('Erro: ong_id não fornecido');
-      return res.status(400).json({ sucesso: false, erro: 'ong_id é obrigatório' });
+    if (!req.body.organizacao_id) {
+      console.error('Erro: organizacao_id não fornecido');
+      return res.status(400).json({ sucesso: false, erro: 'organizacao_id é obrigatório' });
+    }
+    
+    // Buscar a primeira ONG da organização
+    const ongResult = await query(
+      'SELECT ong_id FROM ongs WHERE organizacao_id = $1 LIMIT 1',
+      [req.body.organizacao_id]
+    );
+    
+    if (ongResult.rows.length === 0) {
+      return res.status(400).json({ 
+        sucesso: false, 
+        erro: 'Nenhuma ONG encontrada para esta organização. Cadastre uma ONG primeiro.' 
+      });
     }
     
     // Processa o corpo da requisição
     const mutiraoData = {
       ...req.body,
-      nome: req.body.nome || `Mutirão de Castração - ${new Date(req.body.data_mutirao).toLocaleDateString()}`,
+      ong_id: ongResult.rows[0].ong_id,
+      nome: req.body.nome,
       vagas_disponiveis: req.body.vagas_disponiveis || req.body.total_vagas
     };
     

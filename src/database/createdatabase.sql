@@ -1,4 +1,3 @@
-
 -- Tabela para armazenar informações das organizações
 CREATE TABLE organizacoes (
     organizacao_id SERIAL PRIMARY KEY,
@@ -62,10 +61,11 @@ CREATE TABLE pets (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela para armazenar informações dos mutirões (antigo campanhas)
+-- Tabela para armazenar informações dos mutirões (atualizada com campo nome)
 CREATE TABLE mutiroes (
     mutirao_id SERIAL PRIMARY KEY,
     ong_id INTEGER REFERENCES ongs(ong_id) ON DELETE CASCADE,
+    nome VARCHAR(255) NOT NULL,
     data_mutirao DATE NOT NULL,
     total_vagas INTEGER NOT NULL,
     vagas_disponiveis INTEGER NOT NULL,
