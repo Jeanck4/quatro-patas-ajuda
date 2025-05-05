@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import MutiroesDisponiveis from "./pages/MutiroesDisponiveis";
 import DashboardOrganizacao from "./pages/DashboardOrganizacao";
 import CadastroMutirao from "./pages/CadastroMutirao";
+import AgendarCastracao from "./pages/AgendarCastracao";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => {
               <Route path="/cadastro/mutirao" element={<CadastroMutirao />} />
               <Route path="/ongs" element={<ListaONGs />} />
               <Route path="/mutiroes" element={<MutiroesDisponiveis />} />
+              <Route path="/agendar/:mutiraoId" element={<AgendarCastracao />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/organizacao" element={<DashboardOrganizacao />} />
