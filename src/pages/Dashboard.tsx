@@ -1,4 +1,19 @@
 
+/**
+ * Dashboard.tsx
+ * 
+ * Este componente implementa o painel principal para usuários tutores.
+ * Apresenta uma interface organizada em abas para gerenciar pets, visualizar
+ * agendamentos de mutirões e configurar a conta.
+ * 
+ * Funcionalidades:
+ * - Listagem de pets cadastrados pelo tutor
+ * - Visualização de agendamentos de castração
+ * - Opções para editar ou excluir pets
+ * - Configurações básicas da conta
+ * - Redirecionamentos para cadastro de novos pets ou visualização de mutirões
+ */
+
 import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

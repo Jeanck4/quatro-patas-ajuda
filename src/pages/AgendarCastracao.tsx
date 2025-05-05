@@ -1,4 +1,19 @@
 
+/**
+ * AgendarCastracao.tsx
+ * 
+ * Este componente implementa a página de agendamento de castração para pets.
+ * Permite que tutores selecionem um de seus pets cadastrados e agendem sua
+ * castração em um mutirão específico.
+ * 
+ * Funcionalidades:
+ * - Carrega informações do mutirão selecionado
+ * - Busca todos os pets do tutor
+ * - Permite a seleção de um pet para castração
+ * - Permite adicionar observações opcionais
+ * - Envia os dados para o servidor e redireciona para o dashboard em caso de sucesso
+ */
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';

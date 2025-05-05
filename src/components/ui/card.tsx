@@ -1,3 +1,18 @@
+
+/**
+ * card.tsx
+ * 
+ * Componente de cartão usado para agrupar conteúdo relacionado em uma interface
+ * visual consistente. Implementa um padrão de composição com subcomponentes para
+ * cabeçalho, título, descrição, conteúdo e rodapé.
+ * 
+ * Os cartões são úteis para:
+ * - Organizar informações em seções visualmente distintas
+ * - Criar hierarquias visuais entre diferentes elementos
+ * - Apresentar itens em coleções ou listas 
+ * - Destacar conteúdo importante
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

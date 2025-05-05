@@ -1,3 +1,18 @@
+
+/**
+ * button.tsx
+ * 
+ * Componente de botão reutilizável com múltiplas variantes e tamanhos.
+ * Implementa estilos consistentes para botões em toda a aplicação usando
+ * Tailwind CSS e class-variance-authority para configuração de variantes.
+ * 
+ * Funcionalidades:
+ * - Múltiplas variantes: default, destructive, outline, secondary, ghost, link
+ * - Múltiplos tamanhos: default, sm, lg, icon
+ * - Suporte para o padrão asChild do Radix UI para composição flexível
+ * - Tratamento adequado de estados (disabled, focus, hover)
+ */
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"

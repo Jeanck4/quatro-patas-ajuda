@@ -1,4 +1,15 @@
 
+/**
+ * App.tsx
+ * 
+ * Componente principal da aplicação que configura o roteamento e os provedores contextuais.
+ * Este componente é responsável por:
+ * - Configurar o cliente de consultas (QueryClient) para o React Query
+ * - Configurar o roteamento com React Router
+ * - Fornecer o contexto de autenticação para toda a aplicação
+ * - Configurar os provedores de componentes como tooltips e toasts
+ */
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,7 +31,7 @@ import DashboardOrganizacao from "./pages/DashboardOrganizacao";
 import CadastroMutirao from "./pages/CadastroMutirao";
 import AgendarCastracao from "./pages/AgendarCastracao";
 
-// Create a new QueryClient instance
+// Cria uma nova instância do QueryClient para gerenciar o estado das consultas
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -43,7 +54,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/organizacao" element={<DashboardOrganizacao />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              {/* Adicione novas rotas personalizadas acima da rota curinga "*" */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
