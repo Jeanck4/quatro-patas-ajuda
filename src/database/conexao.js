@@ -1,4 +1,3 @@
-
 /**
  * PostgreSQL database connection module
  */
@@ -167,6 +166,7 @@ export const buscarMutiroes = async () => {
       throw new Error('Não foi possível conectar ao banco de dados');
     }
 
+    // Correção na consulta SQL - usando organizacao_id em vez de uma coluna inexistente
     const result = await client.query(
       `SELECT m.*, org.nome as nome_organizacao 
        FROM mutiroes m 
@@ -232,12 +232,14 @@ export const buscarMutiroesPorOrganizacao = async (organizacaoId) => {
     }
     
     const client = await pool.connect();
+    
+    // Correção na consulta SQL - usando organizacao_id em vez de uma coluna inexistente
     const result = await client.query(
       `SELECT m.*, 
               org.nome as nome_organizacao
        FROM mutiroes m
        JOIN organizacoes org ON m.organizacao_id = org.organizacao_id
-       WHERE org.organizacao_id = $1
+       WHERE m.organizacao_id = $1
        ORDER BY m.data_mutirao DESC`,
       [organizacaoId]
     );
@@ -263,5 +265,35 @@ export const query = async (text, params) => {
   } catch (error) {
     console.error('Error executing query:', error);
     throw error;
+  }
+};
+
+// Aliases para compatibilidade com código existente
+export const isServerOnline = testarConexao;
+export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
+
+// Adicionando funções que estavam faltando para compatibilidade com outros arquivos
+export const inserirOng = async (ongData) => {
+  console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
+  return inserirOrganizacao(ongData);
+};
+
+export const buscarOngs = async () => {
+  try {
+    console.log('Buscando todas as organizações...');
+    const client = await pool.connect();
+    
+    const result = await client.query(
+      `SELECT organizacao_id, nome, email, telefone, endereco, cidade, estado, 
+              cep, descricao, data_disponivel, hora_inicio, hora_fim, vagas_disponiveis 
+       FROM organizacoes
+       ORDER BY nome ASC`
+    );
+    
+    client.release();
+    return { sucesso: true, dados: { organizacoes: result.rows } };
+  } catch (error) {
+    console.error('Erro ao buscar organizações:', error);
+    return { sucesso: false, erro: error.message };
   }
 };

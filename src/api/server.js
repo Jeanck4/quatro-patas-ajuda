@@ -10,7 +10,8 @@ import {
   inserirMutirao,
   buscarMutiroes,
   buscarAgendamentosTutor,
-  buscarMutiroesPorOrganizacao
+  buscarMutiroesPorOrganizacao,
+  pool
 } from '../database/conexao.js';
 
 const app = express();
@@ -135,11 +136,27 @@ app.get('/api/mutiroes', async (req, res) => {
 app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
   try {
     const { organizacaoId } = req.params;
+    console.log(`Buscando mutirões para organização ID: ${organizacaoId}`);
     const resultado = await buscarMutiroesPorOrganizacao(organizacaoId);
     res.json(resultado);
   } catch (err) {
     console.error('Erro ao buscar mutirões da organização:', err);
     res.status(500).json({ sucesso: false, erro: 'Erro ao buscar mutirões da organização' });
+  }
+});
+
+// Rota para buscar todas as organizações (substitui a antiga rota de ONGs)
+app.get('/api/organizacoes', async (req, res) => {
+  try {
+    console.log('Buscando todas as organizações');
+    const result = await query(
+      'SELECT organizacao_id, nome, email, telefone, endereco, cidade, estado, cep, descricao, data_disponivel, hora_inicio, hora_fim, vagas_disponiveis FROM organizacoes',
+      []
+    );
+    res.json({ sucesso: true, dados: { organizacoes: result.rows } });
+  } catch (error) {
+    console.error('Erro ao buscar organizações:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar organizações' });
   }
 });
 

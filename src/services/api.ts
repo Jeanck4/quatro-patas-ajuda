@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -330,6 +329,26 @@ export const removerPet = deletarPet;
 
 // Função para buscar todas as organizações
 export const buscarOrganizacoes = async () => {
+  try {
+    const response = await fetch(`${API_URL}/organizacoes`);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar organizações');
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao buscar organizações:', error);
+    throw error;
+  }
+};
+
+// Adicionando funções que estavam faltando para compatibilidade 
+export const inserirOng = async (ongData: any) => {
+  console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
+  return inserirOrganizacao(ongData);
+};
+
+export const buscarOngs = async () => {
   try {
     const response = await fetch(`${API_URL}/organizacoes`);
     if (!response.ok) {
