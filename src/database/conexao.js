@@ -13,7 +13,8 @@ const poolConfig = {
   port: 5432,
 };
 
-const pool = new Pool(poolConfig);
+// Creating and exporting the connection pool
+export const pool = new Pool(poolConfig);
 
 // Função para testar conexão com o banco de dados
 export const testarConexao = async () => {
