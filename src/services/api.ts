@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -111,30 +112,6 @@ export const inserirOrganizacao = async (organizacaoData: any) => {
   }
 };
 
-// Função para cadastrar ONG
-export const inserirOng = async (ongData: any) => {
-  try {
-    const response = await fetch(`${API_URL}/ongs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(ongData)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.erro || 'Erro ao cadastrar ONG');
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error: any) {
-    console.error('Erro ao cadastrar ONG:', error);
-    throw error;
-  }
-};
-
 // Função para inserir mutirão
 export const inserirMutirao = async (mutiraoData: any) => {
   try {
@@ -181,7 +158,7 @@ export const buscarMutiroes = async () => {
   }
 };
 
-// Função para buscar mutirões de uma organização (corrigido o nome)
+// Função para buscar mutirões de uma organização
 export const buscarMutiroesPorOrganizacao = async (organizacaoId: string) => {
   try {
     const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/mutiroes`);
@@ -286,7 +263,7 @@ export const loginOrganizacao = async (email: string, senha: string) => {
   }
 };
 
-// Função para buscar pets do tutor (renomeado para consistência)
+// Função para buscar pets do tutor
 export const buscarPetsDoTutor = async (tutorId: string) => {
   try {
     const response = await fetch(`${API_URL}/tutores/${tutorId}/pets`);
@@ -351,32 +328,17 @@ export const deletarPet = async (petId: string) => {
 // Alias para compatibilidade com código existente
 export const removerPet = deletarPet;
 
-// Função para buscar todas as ONGs
-export const buscarOngs = async () => {
+// Função para buscar todas as organizações
+export const buscarOrganizacoes = async () => {
   try {
-    const response = await fetch(`${API_URL}/ongs`);
+    const response = await fetch(`${API_URL}/organizacoes`);
     if (!response.ok) {
-      throw new Error('Erro ao buscar ONGs');
+      throw new Error('Erro ao buscar organizações');
     }
     const result = await response.json();
     return result;
   } catch (error: any) {
-    console.error('Erro ao buscar ONGs:', error);
-    throw error;
-  }
-};
-
-// Função para buscar ONGs de uma organização
-export const buscarOngsPorOrganizacao = async (organizacaoId: string) => {
-  try {
-    const response = await fetch(`${API_URL}/organizacoes/${organizacaoId}/ongs`);
-    if (!response.ok) {
-      throw new Error('Erro ao buscar ONGs da organização');
-    }
-    const result = await response.json();
-    return result;
-  } catch (error: any) {
-    console.error('Erro ao buscar ONGs da organização:', error);
+    console.error('Erro ao buscar organizações:', error);
     throw error;
   }
 };

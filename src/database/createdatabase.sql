@@ -1,3 +1,4 @@
+
 -- Tabela para armazenar informações das organizações
 CREATE TABLE organizacoes (
     organizacao_id SERIAL PRIMARY KEY,
@@ -6,21 +7,6 @@ CREATE TABLE organizacoes (
     senha VARCHAR(255) NOT NULL, -- Deve ser armazenada com hash na aplicação real
     telefone VARCHAR(20) NOT NULL,
     cnpj VARCHAR(20) UNIQUE NOT NULL,
-    endereco TEXT NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    estado VARCHAR(2) NOT NULL,
-    cep VARCHAR(10) NOT NULL,
-    descricao TEXT,
-    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabela para armazenar informações das ONGs (agora vinculadas às organizações)
-CREATE TABLE ongs (
-    ong_id SERIAL PRIMARY KEY,
-    organizacao_id INTEGER REFERENCES organizacoes(organizacao_id) ON DELETE CASCADE,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    telefone VARCHAR(20) NOT NULL,
     endereco TEXT NOT NULL,
     cidade VARCHAR(100) NOT NULL,
     estado VARCHAR(2) NOT NULL,
@@ -61,10 +47,10 @@ CREATE TABLE pets (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela para armazenar informações dos mutirões (atualizada com campo nome)
+-- Tabela para armazenar informações dos mutirões (vinculados diretamente a organizações)
 CREATE TABLE mutiroes (
     mutirao_id SERIAL PRIMARY KEY,
-    ong_id INTEGER REFERENCES ongs(ong_id) ON DELETE CASCADE,
+    organizacao_id INTEGER REFERENCES organizacoes(organizacao_id) ON DELETE CASCADE,
     nome VARCHAR(255) NOT NULL,
     data_mutirao DATE NOT NULL,
     total_vagas INTEGER NOT NULL,
@@ -89,10 +75,9 @@ CREATE TABLE agendamentos (
 
 -- Índices para melhorar a performance de consultas frequentes
 CREATE INDEX idx_pets_tutor_id ON pets(tutor_id);
-CREATE INDEX idx_mutiroes_ong_id ON mutiroes(ong_id);
+CREATE INDEX idx_mutiroes_organizacao_id ON mutiroes(organizacao_id);
 CREATE INDEX idx_mutiroes_data ON mutiroes(data_mutirao);
 CREATE INDEX idx_agendamentos_mutirao_id ON agendamentos(mutirao_id);
 CREATE INDEX idx_agendamentos_pet_id ON agendamentos(pet_id);
 CREATE INDEX idx_agendamentos_tutor_id ON agendamentos(tutor_id);
 CREATE INDEX idx_agendamentos_status ON agendamentos(status);
-CREATE INDEX idx_ongs_organizacao_id ON ongs(organizacao_id);

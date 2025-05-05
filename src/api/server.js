@@ -1,15 +1,16 @@
+
 import express from 'express';
 import cors from 'cors';
 import { 
   inserirTutor, 
   inserirPet, 
-  inserirOng, 
   inserirOrganizacao, 
   testarConexao, 
   query,
   inserirMutirao,
   buscarMutiroes,
-  buscarAgendamentosTutor 
+  buscarAgendamentosTutor,
+  buscarMutiroesPorOrganizacao
 } from '../database/conexao.js';
 
 const app = express();
@@ -75,21 +76,6 @@ app.post('/api/organizacoes', async (req, res) => {
   }
 });
 
-// Rota para cadastrar ONG
-app.post('/api/ongs', async (req, res) => {
-  try {
-    const resultado = await inserirOng(req.body);
-    if (resultado.sucesso) {
-      res.status(201).json({ sucesso: true, id: resultado.id });
-    } else {
-      res.status(400).json({ sucesso: false, erro: resultado.erro });
-    }
-  } catch (err) {
-    console.error('Erro no backend:', err);
-    res.status(500).json({ sucesso: false, erro: 'Erro interno no servidor' });
-  }
-});
-
 // Rota para cadastrar mutirão
 app.post('/api/mutiroes', async (req, res) => {
   try {
@@ -100,24 +86,22 @@ app.post('/api/mutiroes', async (req, res) => {
       return res.status(400).json({ sucesso: false, erro: 'organizacao_id é obrigatório' });
     }
     
-    // Buscar a primeira ONG da organização
-    const ongResult = await query(
-      'SELECT ong_id FROM ongs WHERE organizacao_id = $1 LIMIT 1',
+    // Verifica se a organização existe
+    const orgResult = await query(
+      'SELECT organizacao_id FROM organizacoes WHERE organizacao_id = $1',
       [req.body.organizacao_id]
     );
     
-    if (ongResult.rows.length === 0) {
+    if (orgResult.rows.length === 0) {
       return res.status(400).json({ 
         sucesso: false, 
-        erro: 'Nenhuma ONG encontrada para esta organização. Cadastre uma ONG primeiro.' 
+        erro: 'Organização não encontrada. Verifique o ID da organização fornecido.' 
       });
     }
     
     // Processa o corpo da requisição
     const mutiraoData = {
       ...req.body,
-      ong_id: ongResult.rows[0].ong_id,
-      nome: req.body.nome,
       vagas_disponiveis: req.body.vagas_disponiveis || req.body.total_vagas
     };
     
@@ -151,31 +135,10 @@ app.get('/api/mutiroes', async (req, res) => {
 app.get('/api/organizacoes/:organizacaoId/mutiroes', async (req, res) => {
   try {
     const { organizacaoId } = req.params;
-    console.log(`Buscando mutirões da organização ${organizacaoId}...`);
-    
-    // Verificando se ID da organização foi fornecido
-    if (!organizacaoId) {
-      return res.status(400).json({ sucesso: false, erro: 'ID da organização não fornecido' });
-    }
-    
-    // Query atualizada para buscar todos os mutirões associados a ONGs da organização
-    const result = await query(
-      `SELECT m.*, 
-              o.nome as nome_ong, 
-              org.nome as nome_organizacao
-       FROM mutiroes m
-       JOIN ongs o ON m.ong_id = o.ong_id
-       JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
-       WHERE org.organizacao_id = $1
-       ORDER BY m.data_mutirao DESC`,
-      [organizacaoId]
-    );
-    
-    console.log(`Encontrados ${result.rows.length} mutirões para organização ${organizacaoId}`);
-    
-    res.json({ sucesso: true, dados: { mutiroes: result.rows } });
-  } catch (error) {
-    console.error('Erro ao buscar mutirões da organização:', error);
+    const resultado = await buscarMutiroesPorOrganizacao(organizacaoId);
+    res.json(resultado);
+  } catch (err) {
+    console.error('Erro ao buscar mutirões da organização:', err);
     res.status(500).json({ sucesso: false, erro: 'Erro ao buscar mutirões da organização' });
   }
 });
@@ -351,32 +314,17 @@ app.delete('/api/pets/:petId', async (req, res) => {
   }
 });
 
-// Rota para buscar todas as ONGs
-app.get('/api/ongs', async (req, res) => {
+// Rota para buscar todas as organizações
+app.get('/api/organizacoes', async (req, res) => {
   try {
     const result = await query(
-      'SELECT o.ong_id, o.nome, o.email, o.telefone, o.endereco, o.cidade, o.estado, o.cep, o.descricao, o.data_disponivel, o.hora_inicio, o.hora_fim, o.vagas_disponiveis, org.nome as organizacao_nome FROM ongs o JOIN organizacoes org ON o.organizacao_id = org.organizacao_id',
+      'SELECT organizacao_id, nome, email, telefone, endereco, cidade, estado, cep, descricao, data_disponivel, hora_inicio, hora_fim, vagas_disponiveis FROM organizacoes',
       []
     );
-    res.json({ sucesso: true, dados: { ongs: result.rows } });
+    res.json({ sucesso: true, dados: { organizacoes: result.rows } });
   } catch (error) {
-    console.error('Erro ao buscar ONGs:', error);
-    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar ONGs' });
-  }
-});
-
-// Rota para buscar ONGs de uma organização
-app.get('/api/organizacoes/:organizacaoId/ongs', async (req, res) => {
-  try {
-    const { organizacaoId } = req.params;
-    const result = await query(
-      'SELECT * FROM ongs WHERE organizacao_id = $1',
-      [organizacaoId]
-    );
-    res.json({ sucesso: true, dados: { ongs: result.rows } });
-  } catch (error) {
-    console.error('Erro ao buscar ONGs da organização:', error);
-    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar ONGs da organização' });
+    console.error('Erro ao buscar organizações:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar organizações' });
   }
 });
 

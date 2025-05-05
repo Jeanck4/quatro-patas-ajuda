@@ -125,7 +125,7 @@ const MutiroesDisponiveis = () => {
                 <CardHeader>
                   <CardTitle>Mutirão de Castração</CardTitle>
                   <CardDescription>
-                    Organizado por: {mutirao.nome_ong || 'ONG não especificada'}
+                    Organizado por: {mutirao.nome_organizacao || 'Organização não especificada'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">

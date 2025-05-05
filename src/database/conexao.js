@@ -1,3 +1,4 @@
+
 /**
  * PostgreSQL database connection module
  */
@@ -88,10 +89,18 @@ export const inserirOrganizacao = async (org) => {
     const client = await pool.connect();
 
     const result = await client.query(
-      `INSERT INTO organizacoes (nome, email, senha, telefone, cnpj, endereco, cidade, estado, cep, descricao)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING organizacao_id`,
-      [org.nome, org.email, org.senha, org.telefone, org.cnpj, org.endereco, org.cidade, org.estado, org.cep, org.descricao]
+      `INSERT INTO organizacoes (
+        nome, email, senha, telefone, cnpj, endereco, cidade, estado, cep, descricao,
+        data_disponivel, hora_inicio, hora_fim, vagas_disponiveis
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      ) RETURNING organizacao_id`,
+      [
+        org.nome, org.email, org.senha, org.telefone, org.cnpj, org.endereco, 
+        org.cidade, org.estado, org.cep, org.descricao || '', 
+        org.data_disponivel || null, org.hora_inicio || null, 
+        org.hora_fim || null, org.vagas_disponiveis || 0
+      ]
     );
 
     const organizacaoId = result.rows[0].organizacao_id;
@@ -105,73 +114,26 @@ export const inserirOrganizacao = async (org) => {
   }
 };
 
-// Função para inserir uma ONG vinculada a uma organização
-export const inserirOng = async (ong) => {
-  try {
-    console.log('Inserindo ONG no PostgreSQL:', ong);
-    const client = await pool.connect();
-
-    const result = await client.query(
-      `INSERT INTO ongs (
-        organizacao_id, nome, email, telefone,
-        endereco, cidade, estado, cep, descricao,
-        data_disponivel, hora_inicio, hora_fim, vagas_disponiveis
-      ) VALUES (
-        $1, $2, $3, $4,
-        $5, $6, $7, $8, $9,
-        $10, $11, $12, $13
-      ) RETURNING ong_id`,
-      [
-        ong.organizacao_id,
-        ong.nome,
-        ong.email,
-        ong.telefone,
-        ong.endereco,
-        ong.cidade,
-        ong.estado,
-        ong.cep,
-        ong.descricao || '',
-        ong.data_disponivel || null,
-        ong.hora_inicio || null,
-        ong.hora_fim || null,
-        ong.vagas_disponiveis || 0
-      ]
-    );
-
-    const ongId = result.rows[0].ong_id;
-    client.release();
-
-    console.log('ONG cadastrada com sucesso! ID:', ongId);
-    return { sucesso: true, id: ongId };
-  } catch (error) {
-    console.error('Erro ao cadastrar ONG:', error);
-    return { sucesso: false, erro: error.message };
-  }
-};
-
-// Função para inserir um mutirão (atualizada)
+// Função para inserir um mutirão
 export const inserirMutirao = async (mutirao) => {
   try {
     console.log('Inserindo mutirão no PostgreSQL:', mutirao);
     const client = await pool.connect();
-
-    // Verificar se a ONG existe antes de tentar inserir o mutirão
-    const ongCheck = await client.query('SELECT ong_id FROM ongs WHERE ong_id = $1', [mutirao.ong_id]);
     
-    if (ongCheck.rows.length === 0) {
+    if (!mutirao.organizacao_id) {
       client.release();
-      return { sucesso: false, erro: `ONG com ID ${mutirao.ong_id} não encontrada` };
+      return { sucesso: false, erro: 'ID da organização não fornecido' };
     }
     
     const result = await client.query(
       `INSERT INTO mutiroes (
-        ong_id, nome, data_mutirao, total_vagas, vagas_disponiveis, 
+        organizacao_id, nome, data_mutirao, total_vagas, vagas_disponiveis, 
         endereco, cidade, estado, informacoes_adicionais
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9
       ) RETURNING mutirao_id`,
       [
-        mutirao.ong_id,
+        mutirao.organizacao_id,
         mutirao.nome,
         mutirao.data_mutirao, 
         mutirao.total_vagas, 
@@ -194,7 +156,7 @@ export const inserirMutirao = async (mutirao) => {
   }
 };
 
-// Função para buscar mutirões disponíveis - Atualizada para garantir o retorno correto
+// Função para buscar mutirões disponíveis
 export const buscarMutiroes = async () => {
   try {
     console.log('Buscando mutirões disponíveis...');
@@ -206,10 +168,9 @@ export const buscarMutiroes = async () => {
     }
 
     const result = await client.query(
-      `SELECT m.*, o.nome as nome_ong, org.nome as nome_organizacao 
+      `SELECT m.*, org.nome as nome_organizacao 
        FROM mutiroes m 
-       LEFT JOIN ongs o ON m.ong_id = o.ong_id 
-       LEFT JOIN organizacoes org ON o.organizacao_id = org.organizacao_id
+       LEFT JOIN organizacoes org ON m.organizacao_id = org.organizacao_id
        ORDER BY m.data_mutirao ASC`
     );
 
@@ -239,14 +200,14 @@ export const buscarAgendamentosTutor = async (tutorId) => {
       `SELECT a.*, 
               p.nome as nome_pet,
               m.data_mutirao,
-              o.nome as nome_ong,
-              o.endereco as endereco_ong,
-              o.cidade as cidade_ong,
-              o.estado as estado_ong
+              org.nome as nome_organizacao,
+              org.endereco as endereco_organizacao,
+              org.cidade as cidade_organizacao,
+              org.estado as estado_organizacao
        FROM agendamentos a
        JOIN pets p ON a.pet_id = p.pet_id
        JOIN mutiroes m ON a.mutirao_id = m.mutirao_id
-       JOIN ongs o ON m.ong_id = o.ong_id
+       JOIN organizacoes org ON m.organizacao_id = org.organizacao_id
        WHERE a.tutor_id = $1
        ORDER BY m.data_mutirao DESC`,
       [tutorId]
@@ -256,6 +217,37 @@ export const buscarAgendamentosTutor = async (tutorId) => {
     return { sucesso: true, dados: { agendamentos: result.rows } };
   } catch (error) {
     console.error('Erro ao buscar agendamentos do tutor:', error);
+    return { sucesso: false, erro: error.message };
+  }
+};
+
+// Função para buscar mutirões de uma organização
+export const buscarMutiroesPorOrganizacao = async (organizacaoId) => {
+  try {
+    console.log(`Buscando mutirões da organização ${organizacaoId}...`);
+    
+    // Verificando se ID da organização foi fornecido
+    if (!organizacaoId) {
+      return { sucesso: false, erro: 'ID da organização não fornecido' };
+    }
+    
+    const client = await pool.connect();
+    const result = await client.query(
+      `SELECT m.*, 
+              org.nome as nome_organizacao
+       FROM mutiroes m
+       JOIN organizacoes org ON m.organizacao_id = org.organizacao_id
+       WHERE org.organizacao_id = $1
+       ORDER BY m.data_mutirao DESC`,
+      [organizacaoId]
+    );
+    
+    console.log(`Encontrados ${result.rows.length} mutirões para organização ${organizacaoId}`);
+    client.release();
+    
+    return { sucesso: true, dados: { mutiroes: result.rows } };
+  } catch (error) {
+    console.error('Erro ao buscar mutirões da organização:', error);
     return { sucesso: false, erro: error.message };
   }
 };

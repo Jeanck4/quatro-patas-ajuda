@@ -21,7 +21,7 @@ import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import * as api from '@/services/api';
 
-// Schema para validação do formulário (atualizado)
+// Schema para validação do formulário
 const mutiraoFormSchema = z.object({
   nome: z.string().min(5, "O nome do mutirão deve ter pelo menos 5 caracteres."),
   data_mutirao: z.date({
@@ -89,8 +89,7 @@ const CadastroMutirao = () => {
       const mutiraoData = {
         ...data,
         organizacao_id: currentUser.organizacao_id, // Incluir o ID da organização atual
-        vagas_disponiveis: data.total_vagas, // Inicialmente todas as vagas estão disponíveis
-        ong_id: null // Será preenchido no backend
+        vagas_disponiveis: data.total_vagas // Inicialmente todas as vagas estão disponíveis
       };
 
       console.log("Dados do mutirão para cadastro:", mutiraoData);
