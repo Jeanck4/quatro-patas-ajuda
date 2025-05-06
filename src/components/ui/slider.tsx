@@ -3,6 +3,18 @@ import * as SliderPrimitive from "@radix-ui/react-slider"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * slider.tsx
+ * 
+ * Componente de controle deslizante que permite ao usuário selecionar
+ * um valor numérico dentro de um intervalo definido.
+ * Utilizado para:
+ * - Seleção de quantidades
+ * - Controles de volume ou zoom
+ * - Filtros por intervalo de valores (preço, tamanho, etc.)
+ * - Configurações com valores graduais
+ */
+
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>

@@ -1,4 +1,14 @@
 
+/**
+ * toaster.tsx
+ * 
+ * Componente que renderiza todos os toasts ativos na aplicação.
+ * Este componente gerencia:
+ * - Instanciação dos toasts a partir do hook useToast
+ * - Renderização das notificações na interface
+ * - Posicionamento e estilização do container de toasts
+ */
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,

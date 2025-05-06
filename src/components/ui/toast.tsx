@@ -1,4 +1,15 @@
 
+/**
+ * toast.tsx
+ * 
+ * Implementa componentes primários para o sistema de notificações toast.
+ * Este arquivo define os elementos de interface que compõem os toasts, incluindo:
+ * - Estilização e variantes de aparência
+ * - Container e viewport para posicionamento
+ * - Componentes para título, descrição e ações
+ * - Animações e interações
+ */
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
