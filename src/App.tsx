@@ -22,7 +22,7 @@ import CadastroTutor from "./pages/CadastroTutor";
 import CadastroOrganizacao from "./pages/CadastroOrganizacao";
 import CadastroOngOrganizacao from "./pages/CadastroOngOrganizacao";
 import CadastroPet from "./pages/CadastroPet";
-import ListaONGs from "./pages/ListaONGs";
+import ListaOrganizacoes from "./pages/ListaOrganizacoes";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MutiroesDisponiveis from "./pages/MutiroesDisponiveis";
@@ -47,7 +47,7 @@ const App = () => {
               <Route path="/cadastro/ong" element={<CadastroOngOrganizacao />} />
               <Route path="/cadastro/pet" element={<CadastroPet />} />
               <Route path="/cadastro/mutirao" element={<CadastroMutirao />} />
-              <Route path="/ongs" element={<ListaONGs />} />
+              <Route path="/organizacoes" element={<ListaOrganizacoes />} />
               <Route path="/mutiroes" element={<MutiroesDisponiveis />} />
               <Route path="/agendar/:mutiraoId" element={<AgendarCastracao />} />
               <Route path="/login" element={<Login />} />

@@ -1,5 +1,9 @@
+
 /**
- * PostgreSQL database connection module
+ * conexao.js
+ * 
+ * Módulo para conexão e operações com o banco de dados PostgreSQL
+ * Contém todas as funções para interação com o banco de dados
  */
 
 import pg from 'pg';
@@ -273,13 +277,8 @@ export const query = async (text, params) => {
 export const isServerOnline = testarConexao;
 export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
 
-// Adicionando funções que estavam faltando para compatibilidade com outros arquivos
-export const inserirOng = async (ongData) => {
-  console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
-  return inserirOrganizacao(ongData);
-};
-
-export const buscarOngs = async () => {
+// Função para buscar todas as organizações
+export const buscarOrganizacoes = async () => {
   try {
     console.log('Buscando todas as organizações...');
     const client = await pool.connect();
@@ -297,4 +296,15 @@ export const buscarOngs = async () => {
     console.error('Erro ao buscar organizações:', error);
     return { sucesso: false, erro: error.message };
   }
+};
+
+// Funções obsoletas redirecionadas para as novas nomenclaturas
+export const inserirOng = async (ongData) => {
+  console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
+  return inserirOrganizacao(ongData);
+};
+
+export const buscarOngs = async () => {
+  console.log('Redirecionando para buscarOrganizacoes, função buscarOngs está obsoleta');
+  return buscarOrganizacoes();
 };

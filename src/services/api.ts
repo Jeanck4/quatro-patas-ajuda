@@ -1,6 +1,13 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+/**
+ * api.ts
+ * 
+ * Serviço para comunicação com a API do backend
+ * Contém funções para todas as operações com o banco de dados
+ */
+
 // URL base da API
 const API_URL = 'http://localhost:3001/api';
 
@@ -342,22 +349,13 @@ export const buscarOrganizacoes = async () => {
   }
 };
 
-// Adicionando funções que estavam faltando para compatibilidade 
+// Removendo referências obsoletas a ONGs
 export const inserirOng = async (ongData: any) => {
   console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
   return inserirOrganizacao(ongData);
 };
 
 export const buscarOngs = async () => {
-  try {
-    const response = await fetch(`${API_URL}/organizacoes`);
-    if (!response.ok) {
-      throw new Error('Erro ao buscar organizações');
-    }
-    const result = await response.json();
-    return result;
-  } catch (error: any) {
-    console.error('Erro ao buscar organizações:', error);
-    throw error;
-  }
+  console.log('Redirecionando para buscarOrganizacoes, função buscarOngs está obsoleta');
+  return buscarOrganizacoes();
 };

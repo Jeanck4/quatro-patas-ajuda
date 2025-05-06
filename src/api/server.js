@@ -14,6 +14,13 @@ import {
   pool
 } from '../database/conexao.js';
 
+/**
+ * server.js
+ * 
+ * Servidor Express para a API REST do backend
+ * Gerencia todas as rotas e requisições para o banco de dados
+ */
+
 const app = express();
 const PORT = 3001;
 
