@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="hero-pattern py-16 md:py-24">
+      <section className="py-16 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <div className="space-y-6 flex-1">

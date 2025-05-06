@@ -21,7 +21,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { login, userType } = useAuth();
+  const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,6 @@ const Login = () => {
           description: 'Login realizado!',
         });
         
-        // Redirecione com base no tipo de usuário
         if (activeTab === 'tutor') {
           navigate('/dashboard');
         } else {

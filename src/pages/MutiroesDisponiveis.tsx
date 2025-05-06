@@ -21,7 +21,6 @@ const MutiroesDisponiveis = () => {
       setLoading(true);
       setError(null);
       
-      // Verificar se o servidor está online
       const serverStatus = await api.testarConexao();
       if (!serverStatus.sucesso) {
         setError('Servidor backend offline. Execute: node src/api/server.js');
@@ -35,7 +34,6 @@ const MutiroesDisponiveis = () => {
       
       if (response.sucesso) {
         setMutiroes(response.dados?.mutiroes || []);
-        // Reset retry count on success
         setRetryCount(0);
       } else {
         setError(response.erro || 'Erro desconhecido ao carregar mutirões');
@@ -50,7 +48,6 @@ const MutiroesDisponiveis = () => {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor';
       setError(errorMessage);
       
-      // Auto-retry once if we got a network error
       if (errorMessage === 'Failed to fetch' && !shouldRetry && retryCount < 2) {
         setRetryCount(prev => prev + 1);
         setTimeout(() => carregarMutiroes(true), 2000);
@@ -71,7 +68,6 @@ const MutiroesDisponiveis = () => {
     carregarMutiroes();
   }, []);
 
-  // Formata a data no formato brasileiro
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR');
