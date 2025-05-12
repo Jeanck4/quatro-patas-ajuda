@@ -22,8 +22,8 @@ const Index = () => {
                 Conectamos tutores de animais com ONGs que realizam campanhas de castração acessíveis para garantir o bem-estar animal e controle populacional.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button onClick={() => navigate('/cadastro/ong')} size="lg" className="bg-primary hover:bg-primary-600">
-                  Sou uma ONG
+                <Button onClick={() => navigate('/cadastro/organizacao')} size="lg" className="bg-primary hover:bg-primary-600">
+                  Sou uma Organização
                 </Button>
                 <Button onClick={() => navigate('/cadastro/tutor')} size="lg" variant="outline" className="border-primary text-primary hover:bg-primary-50">
                   Sou um Tutor
@@ -164,8 +164,8 @@ const Index = () => {
               Cadastre-se agora e contribua para a causa da saúde animal, seja você uma ONG ou um tutor responsável.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => navigate('/cadastro/ong')} size="lg" variant="secondary" className="bg-white text-primary hover:bg-gray-100">
-                Sou uma ONG
+              <Button onClick={() => navigate('/cadastro/organizacao')} size="lg" variant="secondary" className="bg-white text-primary hover:bg-gray-100">
+                Sou uma Organizacão
               </Button>
               <Button onClick={() => navigate('/cadastro/tutor')} size="lg" className="bg-accent hover:bg-accent-600">
                 Sou um Tutor
