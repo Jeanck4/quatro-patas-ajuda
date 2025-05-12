@@ -274,11 +274,11 @@ export const query = async (text, params) => {
 };
 
 // Aliases para compatibilidade com código existente
-export const isServerOnline = testarConexao;
-export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
+//export const isServerOnline = testarConexao;
+//export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
 
 // Função para buscar todas as organizações
-export const buscarOrganizacoes = async () => {
+/*export const buscarOrganizacoes = async () => {
   try {
     console.log('Buscando todas as organizações...');
     const client = await pool.connect();
@@ -296,15 +296,15 @@ export const buscarOrganizacoes = async () => {
     console.error('Erro ao buscar organizações:', error);
     return { sucesso: false, erro: error.message };
   }
-};
+};*/
 
 // Funções obsoletas redirecionadas para as novas nomenclaturas
-export const inserirOng = async (ongData) => {
-  console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
-  return inserirOrganizacao(ongData);
-};
+//export const inserirOng = async (ongData) => {
+//  console.log('Redirecionando para inserirOrganizacao, função inserirOng está obsoleta');
+//  return inserirOrganizacao(ongData);
+//};
 
-export const buscarOngs = async () => {
-  console.log('Redirecionando para buscarOrganizacoes, função buscarOngs está obsoleta');
-  return buscarOrganizacoes();
-};
+//export const buscarOngs = async () => {
+//  console.log('Redirecionando para buscarOrganizacoes, função buscarOngs está obsoleta');
+//  return buscarOrganizacoes();
+//};
