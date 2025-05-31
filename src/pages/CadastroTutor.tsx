@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, AlertTriangle, Server } from 'lucide-react';
+import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/hooks/use-toast';
 import * as api from '@/services/api';
@@ -28,25 +29,6 @@ const CadastroTutor = () => {
   
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [serverConectado, setServerConectado] = useState(false);
-  const [conexaoTestada, setConexaoTestada] = useState(false);
-  
-  useEffect(() => {
-    const verificarConexao = async () => {
-      try {
-        const resultado = await api.testarConexao();
-        setServerConectado(resultado.sucesso);
-        setConexaoTestada(true);
-        console.log("Resultado da verificação de conexão:", resultado);
-      } catch (error) {
-        console.error("Erro ao verificar conexão:", error);
-        setServerConectado(false);
-        setConexaoTestada(true);
-      }
-    };
-    
-    verificarConexao();
-  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -92,42 +74,6 @@ const CadastroTutor = () => {
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-  
-  const testarConexaoBanco = async () => {
-    setLoading(true);
-    try {
-      console.log("Testando conexão com o banco de dados...");
-      const resultado = await api.testarConexao();
-      
-      setServerConectado(resultado.sucesso);
-      setConexaoTestada(true);
-      
-      if (resultado.sucesso) {
-        toast({
-          title: "Conexão com o banco bem-sucedida!",
-          description: `Servidor respondeu em: ${resultado.dados?.agora}`,
-        });
-        console.log("Conexão bem-sucedida:", resultado);
-      } else {
-        toast({
-          title: "Falha na conexão!",
-          description: resultado.erro,
-          variant: "destructive"
-        });
-        console.error("Falha na conexão:", resultado.erro);
-      }
-    } catch (error) {
-      console.error('Erro ao testar conexão:', error);
-      setServerConectado(false);
-      toast({
-        title: "Erro no teste de conexão",
-        description: "Verifique se o servidor está rodando e tente novamente",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,43 +123,6 @@ const CadastroTutor = () => {
     <MainLayout>
       <div className="container py-10">
         <div className="max-w-3xl mx-auto">
-          {!serverConectado && conexaoTestada && (
-            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded flex items-center">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
-              <div>
-                <h3 className="font-bold text-yellow-700">Atenção: Servidor indisponível</h3>
-                <p className="text-sm text-yellow-700">
-                  Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001 
-                  e tente novamente. Execute: <code>node src/api/server.js</code> no terminal.
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {serverConectado && (
-            <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
-              <Server className="h-5 w-5 text-green-600 mr-2" />
-              <div>
-                <h3 className="font-bold text-green-700">Conectado ao servidor</h3>
-                <p className="text-sm text-green-700">
-                  Seu app está conectado ao servidor backend e ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {!conexaoTestada && (
-            <div className="mb-4 p-4 bg-blue-100 border border-blue-400 rounded flex items-center">
-              <Server className="h-5 w-5 text-blue-600 mr-2" />
-              <div>
-                <h3 className="font-bold text-blue-700">Verificando Conexão</h3>
-                <p className="text-sm text-blue-700">
-                  Verificando conexão com o servidor backend...
-                </p>
-              </div>
-            </div>
-          )}
-          
           <Card className="border shadow-md">
             <CardHeader>
               <CardTitle className="text-2xl text-primary">Cadastro de Tutor</CardTitle>
@@ -375,19 +284,9 @@ const CadastroTutor = () => {
               </CardContent>
               
               <CardFooter className="flex flex-col md:flex-row gap-4 md:justify-between">
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => navigate('/')}>
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="secondary" 
-                    onClick={testarConexaoBanco}
-                    disabled={loading}
-                  >
-                    Testar Conexão
-                  </Button>
-                </div>
+                <Button type="button" variant="outline" onClick={() => navigate('/')}>
+                  Cancelar
+                </Button>
                 <Button 
                   type="submit" 
                   className="bg-primary hover:bg-primary-600"

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, AlertTriangle, Server } from 'lucide-react';
+import { Check } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
 import { useToast } from '@/components/ui/use-toast';
 import * as api from '@/services/api';
@@ -30,21 +31,6 @@ const CadastroOrganizacao = () => {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [serverConectado, setServerConectado] = useState(false);
-
-  useEffect(() => {
-    const verificarConexao = async () => {
-      try {
-        const resultado = await api.testarConexao();
-        setServerConectado(resultado.sucesso);
-      } catch (error) {
-        console.error('Erro ao verificar conexão:', error);
-        setServerConectado(false);
-      }
-    };
-
-    verificarConexao();
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -137,31 +123,6 @@ const CadastroOrganizacao = () => {
     <MainLayout>
       <div className="container py-10">
         <div className="max-w-3xl mx-auto">
-          {!serverConectado && (
-            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded flex items-center">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
-              <div>
-                <h3 className="font-bold text-yellow-700">Atenção: Servidor indisponível</h3>
-                <p className="text-sm text-yellow-700">
-                  Não foi possível conectar ao servidor backend. Certifique-se de que o servidor está rodando em http://localhost:3001
-                  e tente novamente. Execute: <code>node src/api/server.js</code> no terminal.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {serverConectado && (
-            <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
-              <Server className="h-5 w-5 text-green-600 mr-2" />
-              <div>
-                <h3 className="font-bold text-green-700">Conectado ao servidor</h3>
-                <p className="text-sm text-green-700">
-                  Seu app está conectado ao servidor backend e ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
-                </p>
-              </div>
-            </div>
-          )}
-
           <Card className="border shadow-md">
             <CardHeader>
               <CardTitle className="text-2xl text-primary">Cadastro de Organização</CardTitle>
