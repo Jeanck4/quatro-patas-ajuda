@@ -185,15 +185,28 @@ export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
 // Função para buscar agendamentos de um mutirão específico
 export const buscarAgendamentosMutirao = async (mutiraoId: string) => {
   try {
+    console.log(`Fazendo requisição para buscar agendamentos do mutirão: ${mutiraoId}`);
+    
     const response = await fetch(`${API_URL}/mutiroes/${mutiraoId}/agendamentos`);
+    
+    console.log('Status da resposta:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Erro ao buscar agendamentos do mutirão');
+      const errorText = await response.text();
+      console.error('Erro na resposta:', errorText);
+      throw new Error(`Erro HTTP ${response.status}: ${errorText}`);
     }
+    
     const result = await response.json();
+    console.log('Resultado da API de agendamentos:', result);
+    
     return result;
   } catch (error: any) {
-    console.error('Erro ao buscar agendamentos do mutirão:', error);
-    throw error;
+    console.error('Erro detalhado ao buscar agendamentos do mutirão:', error);
+    return {
+      sucesso: false,
+      erro: error.message || 'Erro ao buscar agendamentos do mutirão'
+    };
   }
 };
 

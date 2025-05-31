@@ -184,6 +184,21 @@ app.get('/api/mutiroes/:mutiraoId/agendamentos', async (req, res) => {
     const { mutiraoId } = req.params;
     console.log(`Buscando agendamentos para mutirão ID: ${mutiraoId}`);
     
+    // Verificar se o mutirão existe primeiro
+    const mutiraoCheck = await query(
+      'SELECT mutirao_id FROM mutiroes WHERE mutirao_id = $1',
+      [mutiraoId]
+    );
+    
+    if (mutiraoCheck.rows.length === 0) {
+      console.log(`Mutirão ${mutiraoId} não encontrado`);
+      return res.json({ 
+        sucesso: true, 
+        dados: { agendamentos: [] },
+        mensagem: 'Mutirão não encontrado'
+      });
+    }
+    
     const result = await query(`
       SELECT 
         a.agendamento_id,
@@ -209,13 +224,19 @@ app.get('/api/mutiroes/:mutiraoId/agendamentos', async (req, res) => {
       ORDER BY a.data_agendamento DESC
     `, [mutiraoId]);
     
+    console.log(`Encontrados ${result.rows.length} agendamentos para mutirão ${mutiraoId}`);
+    console.log('Agendamentos:', result.rows);
+    
     res.json({ 
       sucesso: true, 
       dados: { agendamentos: result.rows } 
     });
   } catch (error) {
-    console.error('Erro ao buscar agendamentos do mutirão:', error);
-    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar agendamentos do mutirão' });
+    console.error('Erro detalhado ao buscar agendamentos do mutirão:', error);
+    res.status(500).json({ 
+      sucesso: false, 
+      erro: 'Erro ao buscar agendamentos do mutirão: ' + error.message 
+    });
   }
 });
 

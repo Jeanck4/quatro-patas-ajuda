@@ -20,6 +20,7 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
 
   useEffect(() => {
     if (isOpen && mutiraoId) {
+      console.log(`Dialog aberto para mutirão: ${mutiraoId}`);
       loadAgendamentos();
     }
   }, [isOpen, mutiraoId]);
@@ -27,24 +28,44 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
   const loadAgendamentos = async () => {
     try {
       setLoading(true);
-      console.log(`Carregando agendamentos para mutirão ${mutiraoId}`);
+      console.log(`Iniciando carregamento de agendamentos para mutirão ${mutiraoId}`);
       
-      const response = await api.buscarAgendamentosMutirao(mutiraoId);
-      
-      if (response.sucesso) {
-        setAgendamentos(response.dados.agendamentos || []);
-      } else {
+      // Verificar se o servidor está online primeiro
+      const serverStatus = await api.testarConexao();
+      if (!serverStatus.sucesso) {
+        console.error('Servidor offline');
         toast({
           title: 'Erro',
-          description: 'Não foi possível carregar os agendamentos',
+          description: 'Servidor backend offline. Execute: node src/api/server.js',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const response = await api.buscarAgendamentosMutirao(mutiraoId);
+      console.log('Resposta completa da API:', response);
+      
+      if (response.sucesso) {
+        const agendamentosData = response.dados?.agendamentos || [];
+        console.log(`Agendamentos recebidos:`, agendamentosData);
+        setAgendamentos(agendamentosData);
+        
+        if (agendamentosData.length === 0) {
+          console.log('Nenhum agendamento encontrado');
+        }
+      } else {
+        console.error('Erro na resposta da API:', response.erro);
+        toast({
+          title: 'Erro',
+          description: `Não foi possível carregar os agendamentos: ${response.erro}`,
           variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar agendamentos:', error);
+      console.error('Erro completo ao carregar agendamentos:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao carregar agendamentos',
+        description: `Erro ao carregar agendamentos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: 'destructive',
       });
     } finally {
@@ -53,6 +74,7 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
   };
 
   const formatarData = (dataString: string) => {
+    if (!dataString) return 'Data não informada';
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR');
   };
@@ -65,7 +87,7 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
             <div>
               <DialogTitle>Agendamentos do Mutirão</DialogTitle>
               <DialogDescription>
-                Lista de todos os tutores e pets agendados para este mutirão
+                Lista de todos os tutores e pets agendados para este mutirão (ID: {mutiraoId})
               </DialogDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -157,6 +179,9 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
             <Dog className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
             <p className="text-muted-foreground">
               Nenhum agendamento encontrado para este mutirão.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              ID do Mutirão: {mutiraoId}
             </p>
           </div>
         )}
