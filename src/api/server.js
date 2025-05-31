@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import { 
@@ -176,6 +175,47 @@ app.get('/api/tutores/:tutorId/agendamentos', async (req, res) => {
   } catch (err) {
     console.error('Erro ao buscar agendamentos:', err);
     res.status(500).json({ sucesso: false, erro: 'Erro ao buscar agendamentos do tutor' });
+  }
+});
+
+// Rota para buscar agendamentos de um mutirão específico
+app.get('/api/mutiroes/:mutiraoId/agendamentos', async (req, res) => {
+  try {
+    const { mutiraoId } = req.params;
+    console.log(`Buscando agendamentos para mutirão ID: ${mutiraoId}`);
+    
+    const result = await query(`
+      SELECT 
+        a.agendamento_id,
+        a.observacoes,
+        a.data_agendamento,
+        t.tutor_id,
+        t.nome as nome_tutor,
+        t.email as email_tutor,
+        t.telefone as telefone_tutor,
+        p.pet_id,
+        p.nome as nome_pet,
+        p.especie,
+        p.raca,
+        p.idade,
+        p.sexo,
+        p.peso,
+        m.data_mutirao
+      FROM agendamentos a
+      JOIN tutores t ON a.tutor_id = t.tutor_id
+      JOIN pets p ON a.pet_id = p.pet_id
+      JOIN mutiroes m ON a.mutirao_id = m.mutirao_id
+      WHERE a.mutirao_id = $1
+      ORDER BY a.data_agendamento DESC
+    `, [mutiraoId]);
+    
+    res.json({ 
+      sucesso: true, 
+      dados: { agendamentos: result.rows } 
+    });
+  } catch (error) {
+    console.error('Erro ao buscar agendamentos do mutirão:', error);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao buscar agendamentos do mutirão' });
   }
 });
 

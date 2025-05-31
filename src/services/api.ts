@@ -182,6 +182,21 @@ export const buscarMutiroesPorOrganizacao = async (organizacaoId: string) => {
 // Alias para compatibilidade com código existente
 export const buscarMutiroesOrganizacao = buscarMutiroesPorOrganizacao;
 
+// Função para buscar agendamentos de um mutirão específico
+export const buscarAgendamentosMutirao = async (mutiraoId: string) => {
+  try {
+    const response = await fetch(`${API_URL}/mutiroes/${mutiraoId}/agendamentos`);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar agendamentos do mutirão');
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao buscar agendamentos do mutirão:', error);
+    throw error;
+  }
+};
+
 // Função para buscar agendamentos do tutor
 export const buscarAgendamentosTutor = async (tutorId: string) => {
   try {

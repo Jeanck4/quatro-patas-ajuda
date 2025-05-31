@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { AgendamentosMutiraoDialog } from '@/components/AgendamentosMutiraoDialog';
 import * as api from '@/services/api';
 
 const DashboardOrganizacao = () => {
@@ -17,6 +17,8 @@ const DashboardOrganizacao = () => {
   const [mutiroes, setMutiroes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMutiraoId, setSelectedMutiraoId] = useState<string | null>(null);
+  const [isAgendamentosDialogOpen, setIsAgendamentosDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && userType === 'organizacao' && currentUser?.organizacao_id) {
@@ -90,6 +92,11 @@ const DashboardOrganizacao = () => {
     if (currentUser?.organizacao_id) {
       loadMutiroes(currentUser.organizacao_id);
     }
+  };
+
+  const handleVerAgendamentos = (mutiraoId: string) => {
+    setSelectedMutiraoId(mutiraoId);
+    setIsAgendamentosDialogOpen(true);
   };
 
   return (
@@ -195,7 +202,11 @@ const DashboardOrganizacao = () => {
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="outline" className="w-full">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => handleVerAgendamentos(mutirao.mutirao_id)}
+                      >
                         Ver Agendamentos
                       </Button>
                     </CardFooter>
@@ -246,6 +257,18 @@ const DashboardOrganizacao = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog para exibir agendamentos */}
+      {selectedMutiraoId && (
+        <AgendamentosMutiraoDialog
+          mutiraoId={selectedMutiraoId}
+          isOpen={isAgendamentosDialogOpen}
+          onClose={() => {
+            setIsAgendamentosDialogOpen(false);
+            setSelectedMutiraoId(null);
+          }}
+        />
+      )}
     </MainLayout>
   );
 };
