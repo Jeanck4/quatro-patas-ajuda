@@ -84,9 +84,6 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agendamentos do Mutirão</DialogTitle>
-          <DialogDescription>
-            Lista de todos os tutores e pets agendados para este mutirão (ID: {mutiraoId})
-          </DialogDescription>
         </DialogHeader>
 
         {loading ? (

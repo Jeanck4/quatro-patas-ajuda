@@ -111,7 +111,7 @@ const CadastroPet = () => {
           
           toast({
             title: "Pet adicionado!",
-            description: `${formData.nome} foi adicionado com sucesso. ID: ${resultado.id}`,
+            description: `${formData.nome} foi adicionado com sucesso.`,
           });
           
           setFormData({
@@ -157,11 +157,11 @@ const CadastroPet = () => {
     
     toast({
       title: "Cadastro finalizado!",
-      description: `${pets.length} ${pets.length === 1 ? 'pet foi cadastrado' : 'pets foram cadastrados'} com sucesso no banco de dados.`,
+      description: `${pets.length} ${pets.length === 1 ? 'pet foi cadastrado' : 'pets foram cadastrados'} com sucesso.`,
     });
     
     setTimeout(() => {
-      navigate('/ongs');
+      navigate('/');
     }, 2000);
   };
   
@@ -182,17 +182,6 @@ const CadastroPet = () => {
             </div>
           )}
           
-          {serverConectado && (
-            <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded flex items-center">
-              <Server className="h-5 w-5 text-green-600 mr-2" />
-              <div>
-                <h3 className="font-bold text-green-700">Conectado ao servidor</h3>
-                <p className="text-sm text-green-700">
-                  Seu app está conectado ao servidor backend e ao banco de dados PostgreSQL. Os dados serão persistidos corretamente.
-                </p>
-              </div>
-            </div>
-          )}
           
           <Card className="border shadow-md mb-8">
             <CardHeader>

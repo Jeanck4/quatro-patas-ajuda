@@ -93,7 +93,7 @@ const CadastroTutor = () => {
           
           toast({
             title: "Cadastro realizado!",
-            description: `Seus dados foram salvos com sucesso. ID: ${resultado.id}`,
+            description: `Seus dados foram salvos com sucesso.`,
           });
           
           setTimeout(() => {
