@@ -168,22 +168,15 @@ const MutiroesDisponiveis = () => {
                     )}
                   </div>
                 </CardContent>
-                <CardFooter>
-                  {isOrganizacao ? (
-                    <Button className="w-full" asChild>
-                      <Link to="/cadastro/pet">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Cadastrar Pet
-                      </Link>
-                    </Button>
-                  ) : (
+                {!isOrganizacao && (
+                  <CardFooter>
                     <Button className="w-full" asChild disabled={mutirao.vagas_disponiveis <= 0}>
                       <Link to={`/agendar/${mutirao.mutirao_id}`}>
                         {mutirao.vagas_disponiveis > 0 ? 'Agendar castração' : 'Sem vagas disponíveis'}
                       </Link>
                     </Button>
-                  )}
-                </CardFooter>
+                  </CardFooter>
+                )}
               </Card>
             ))}
           </div>
@@ -196,6 +189,18 @@ const MutiroesDisponiveis = () => {
             <p className="text-sm text-muted-foreground mt-2">
               {error ? 'Clique em "Atualizar" para tentar novamente.' : 'Volte em breve para verificar novos mutirões.'}
             </p>
+          </div>
+        )}
+
+        {/* Botão flutuante para organizações cadastrarem mutirões */}
+        {isOrganizacao && (
+          <div className="fixed bottom-6 right-6">
+            <Button size="lg" className="shadow-lg" asChild>
+              <Link to="/cadastro/mutirao">
+                <Plus className="mr-2 h-5 w-5" />
+                Cadastrar Mutirão
+              </Link>
+            </Button>
           </div>
         )}
       </div>
