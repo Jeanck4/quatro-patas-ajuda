@@ -3,24 +3,24 @@ import { useState, useEffect, useCallback } from 'react';
 
 export interface AccessibilitySettings {
   fontSize: number;
-  highContrast: boolean;
   darkMode: boolean;
   reducedMotion: boolean;
   screenReader: boolean;
   keyboardNavigation: boolean;
   largerCursor: boolean;
   focusIndicator: boolean;
+  textToSpeech: boolean;
 }
 
 const defaultSettings: AccessibilitySettings = {
   fontSize: 16,
-  highContrast: false,
   darkMode: false,
   reducedMotion: false,
   screenReader: false,
   keyboardNavigation: true,
   largerCursor: false,
   focusIndicator: true,
+  textToSpeech: false,
 };
 
 export const useAccessibility = () => {
@@ -37,13 +37,6 @@ export const useAccessibility = () => {
     
     // Tamanho da fonte
     root.style.fontSize = `${settings.fontSize}px`;
-    
-    // Alto contraste
-    if (settings.highContrast) {
-      root.classList.add('high-contrast');
-    } else {
-      root.classList.remove('high-contrast');
-    }
     
     // Modo escuro
     if (settings.darkMode) {
@@ -77,6 +70,57 @@ export const useAccessibility = () => {
     localStorage.setItem('accessibility-settings', JSON.stringify(settings));
   }, [settings]);
 
+  // Text-to-Speech no hover
+  useEffect(() => {
+    if (!settings.textToSpeech) return;
+
+    const handleMouseEnter = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target && target.textContent && target.textContent.trim()) {
+        // Cancela qualquer fala anterior
+        speechSynthesis.cancel();
+        
+        // Cria nova utterance
+        const utterance = new SpeechSynthesisUtterance(target.textContent.trim());
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        utterance.volume = 0.7;
+        
+        // Adiciona classe visual durante a fala
+        target.classList.add('being-spoken');
+        
+        utterance.onend = () => {
+          target.classList.remove('being-spoken');
+        };
+        
+        speechSynthesis.speak(utterance);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      speechSynthesis.cancel();
+      document.querySelectorAll('.being-spoken').forEach(el => {
+        el.classList.remove('being-spoken');
+      });
+    };
+
+    // Adiciona eventos a elementos com texto
+    const elementsWithText = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, button, a, label, td, th, li');
+    
+    elementsWithText.forEach(element => {
+      element.addEventListener('mouseenter', handleMouseEnter);
+      element.addEventListener('mouseleave', handleMouseLeave);
+    });
+
+    return () => {
+      speechSynthesis.cancel();
+      elementsWithText.forEach(element => {
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+      });
+    };
+  }, [settings.textToSpeech]);
+
   // Navegação por teclado
   useEffect(() => {
     if (!settings.keyboardNavigation) return;
@@ -102,6 +146,13 @@ export const useAccessibility = () => {
           main.focus();
           main.scrollIntoView({ behavior: 'smooth' });
         }
+      }
+      
+      // Alt + S: Parar fala
+      if (e.altKey && e.key === 's') {
+        e.preventDefault();
+        speechSynthesis.cancel();
+        announceToScreenReader('Fala interrompida');
       }
     };
 

@@ -102,27 +102,6 @@
 }
 
 /* Acessibilidade */
-.high-contrast {
-  filter: contrast(200%) brightness(150%);
-}
-
-.high-contrast * {
-  background-color: white !important;
-  color: black !important;
-  border-color: black !important;
-}
-
-.high-contrast a {
-  color: blue !important;
-  text-decoration: underline !important;
-}
-
-.high-contrast button {
-  background-color: black !important;
-  color: white !important;
-  border: 2px solid black !important;
-}
-
 .dark-mode {
   background-color: #1a1a1a !important;
   color: #ffffff !important;
@@ -153,6 +132,21 @@
 .focus-indicator *:focus {
   outline: 3px solid #4285f4 !important;
   outline-offset: 2px !important;
+}
+
+/* Texto sendo falado */
+.being-spoken {
+  background-color: #fff3cd !important;
+  border: 2px solid #ffc107 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.5) !important;
+  transition: all 0.2s ease !important;
+}
+
+.dark-mode .being-spoken {
+  background-color: #664d03 !important;
+  border-color: #ffca2c !important;
+  color: #fff !important;
 }
 
 /* Screen reader only content */

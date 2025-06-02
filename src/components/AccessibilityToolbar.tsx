@@ -7,17 +7,16 @@ import {
   X, 
   Plus, 
   Minus, 
-  Eye, 
   Moon, 
   Sun, 
   MousePointer, 
   Keyboard, 
   Volume2,
   RotateCcw,
-  Accessibility
+  Accessibility,
+  VolumeX
 } from 'lucide-react';
 import { useAccessibility } from '@/hooks/useAccessibility';
-import { cn } from '@/lib/utils';
 
 const AccessibilityToolbar = () => {
   const { 
@@ -104,25 +103,10 @@ const AccessibilityToolbar = () => {
 
         <Separator />
 
-        {/* Contraste e Cores */}
+        {/* Modo Escuro */}
         <div className="space-y-3">
-          <h3 className="font-medium">Contraste e Cores</h3>
+          <h3 className="font-medium">Tema</h3>
           
-          <Button
-            variant={settings.highContrast ? "default" : "outline"}
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => {
-              updateSetting('highContrast', !settings.highContrast);
-              announceToScreenReader(
-                settings.highContrast ? 'Alto contraste desativado' : 'Alto contraste ativado'
-              );
-            }}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Alto Contraste
-          </Button>
-
           <Button
             variant={settings.darkMode ? "default" : "outline"}
             size="sm"
@@ -140,6 +124,34 @@ const AccessibilityToolbar = () => {
               <Moon className="h-4 w-4 mr-2" />
             )}
             Modo Escuro
+          </Button>
+        </div>
+
+        <Separator />
+
+        {/* Texto para Fala */}
+        <div>
+          <h3 className="font-medium mb-2">Áudio</h3>
+          <Button
+            variant={settings.textToSpeech ? "default" : "outline"}
+            size="sm"
+            className="w-full justify-start"
+            onClick={() => {
+              updateSetting('textToSpeech', !settings.textToSpeech);
+              if (settings.textToSpeech) {
+                speechSynthesis.cancel();
+              }
+              announceToScreenReader(
+                settings.textToSpeech ? 'Texto para fala desativado' : 'Texto para fala ativado - passe o mouse sobre textos para ouvir'
+              );
+            }}
+          >
+            {settings.textToSpeech ? (
+              <VolumeX className="h-4 w-4 mr-2" />
+            ) : (
+              <Volume2 className="h-4 w-4 mr-2" />
+            )}
+            Falar Texto no Hover
           </Button>
         </div>
 
@@ -223,6 +235,7 @@ const AccessibilityToolbar = () => {
           size="sm"
           className="w-full"
           onClick={() => {
+            speechSynthesis.cancel();
             resetSettings();
             announceToScreenReader('Configurações de acessibilidade restauradas');
           }}
@@ -237,6 +250,7 @@ const AccessibilityToolbar = () => {
           <p>Alt + A: Abrir/fechar toolbar</p>
           <p>Alt + H: Ir ao topo</p>
           <p>Alt + M: Ir ao conteúdo principal</p>
+          <p>Alt + S: Parar fala</p>
         </div>
       </CardContent>
     </Card>
