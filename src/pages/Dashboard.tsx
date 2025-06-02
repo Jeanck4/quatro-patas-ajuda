@@ -1,4 +1,3 @@
-
 /**
  * Dashboard.tsx
  * 
@@ -25,7 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { EditPetDialog } from '@/components/EditPetDialog';
 import * as api from '@/services/api';
-import { Dog, Calendar, Settings, LogOut, Trash, Pencil, MapPin, HelpCircle } from 'lucide-react';
+import { Dog, Calendar, Settings, LogOut, Trash, Pencil, MapPin, HelpCircle, User } from 'lucide-react';
 
 const Dashboard = () => {
   const { currentUser, userType, isAuthenticated, logout } = useAuth();
@@ -160,14 +159,50 @@ const Dashboard = () => {
     return data.toLocaleDateString('pt-BR');
   };
 
-  // Redirect if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  // Redirect if user is not a tutor but is authenticated
+  if (isAuthenticated && userType !== 'tutor') {
+    return <Navigate to="/dashboard/organizacao" />;
   }
 
-  // Redirect if user is not a tutor
-  if (userType !== 'tutor') {
-    return <Navigate to="/dashboard/organizacao" />;
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <MainLayout>
+        <div className="container py-8">
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>Acesso Restrito</CardTitle>
+                <CardDescription>
+                  Você precisa estar logado para acessar o dashboard
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Para ver suas informações, pets e agendamentos, você precisa fazer login ou criar uma conta.
+                </p>
+                <div className="space-y-2">
+                  <Button className="w-full" asChild>
+                    <Link to="/login">
+                      <User className="mr-2 h-4 w-4" />
+                      Fazer Login
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/cadastro">
+                      Criar Conta
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
 
   return (
