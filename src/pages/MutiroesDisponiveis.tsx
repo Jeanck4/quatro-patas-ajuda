@@ -194,7 +194,7 @@ const MutiroesDisponiveis = () => {
 
         {/* Botão flutuante para organizações cadastrarem mutirões */}
         {isOrganizacao && (
-          <div className="fixed bottom-6 right-6">
+          <div className="fixed bottom-6 right-20">
             <Button size="lg" className="shadow-lg" asChild>
               <Link to="/cadastro/mutirao">
                 <Plus className="mr-2 h-5 w-5" />
