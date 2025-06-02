@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/layouts/MainLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import * as api from '@/services/api';
-import { MapPin, Calendar, Users, RefreshCw, AlertCircle } from 'lucide-react';
+import { MapPin, Calendar, Users, RefreshCw, AlertCircle, Plus } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const MutiroesDisponiveis = () => {
+  const { userType } = useAuth();
   const [mutiroes, setMutiroes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,18 +75,25 @@ const MutiroesDisponiveis = () => {
     return data.toLocaleDateString('pt-BR');
   };
 
+  const isOrganizacao = userType === 'organizacao';
+
   return (
     <MainLayout>
       <div className="container py-8">
         <div className="flex justify-between items-center mb-2">
-          <h1 className="text-3xl font-bold">Mutirões de Castração Disponíveis</h1>
+          <h1 className="text-3xl font-bold">
+            {isOrganizacao ? 'Mutirões de Castração' : 'Mutirões de Castração Disponíveis'}
+          </h1>
           <Button variant="outline" size="sm" onClick={() => carregarMutiroes()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
         </div>
         <p className="text-muted-foreground mb-8">
-          Selecione um mutirão abaixo para agendar a castração do seu pet
+          {isOrganizacao 
+            ? 'Visualize os mutirões cadastrados no sistema'
+            : 'Selecione um mutirão abaixo para agendar a castração do seu pet'
+          }
         </p>
 
         {error && (
@@ -160,11 +169,20 @@ const MutiroesDisponiveis = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full" asChild disabled={mutirao.vagas_disponiveis <= 0}>
-                    <Link to={`/agendar/${mutirao.mutirao_id}`}>
-                      {mutirao.vagas_disponiveis > 0 ? 'Agendar castração' : 'Sem vagas disponíveis'}
-                    </Link>
-                  </Button>
+                  {isOrganizacao ? (
+                    <Button className="w-full" asChild>
+                      <Link to="/cadastro/pet">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Cadastrar Pet
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button className="w-full" asChild disabled={mutirao.vagas_disponiveis <= 0}>
+                      <Link to={`/agendar/${mutirao.mutirao_id}`}>
+                        {mutirao.vagas_disponiveis > 0 ? 'Agendar castração' : 'Sem vagas disponíveis'}
+                      </Link>
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))}

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { Dog, User, Phone, Mail, X } from 'lucide-react';
+import { Dog, User, Phone, Mail } from 'lucide-react';
 import * as api from '@/services/api';
 
 interface AgendamentosMutiraoDialogProps {
@@ -83,17 +83,10 @@ export const AgendamentosMutiraoDialog = ({ mutiraoId, isOpen, onClose }: Agenda
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <DialogTitle>Agendamentos do Mutirão</DialogTitle>
-              <DialogDescription>
-                Lista de todos os tutores e pets agendados para este mutirão (ID: {mutiraoId})
-              </DialogDescription>
-            </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle>Agendamentos do Mutirão</DialogTitle>
+          <DialogDescription>
+            Lista de todos os tutores e pets agendados para este mutirão (ID: {mutiraoId})
+          </DialogDescription>
         </DialogHeader>
 
         {loading ? (
