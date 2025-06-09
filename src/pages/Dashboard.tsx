@@ -1,292 +1,185 @@
-/**
- * Dashboard.tsx
- * 
- * Este componente implementa o painel principal para usuários tutores.
- * Apresenta uma interface organizada em abas para gerenciar pets, visualizar
- * agendamentos de mutirões e configurar a conta.
- * 
- * Funcionalidades:
- * - Listagem de pets cadastrados pelo tutor
- * - Visualização de agendamentos de castração
- * - Opções para editar ou excluir pets
- * - Configurações básicas da conta
- * - Redirecionamentos para cadastro de novos pets ou visualização de mutirões
- */
-
 import { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import MainLayout from '@/layouts/MainLayout';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { EditPetDialog } from '@/components/EditPetDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import MainLayout from '@/layouts/MainLayout';
 import * as api from '@/services/api';
-import { Dog, Calendar, Settings, LogOut, Trash, Pencil, MapPin, HelpCircle, User } from 'lucide-react';
+import { Dog, Calendar, MapPin, RefreshCw, AlertCircle, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CancelarAgendamentoDialog } from '@/components/CancelarAgendamentoDialog';
 
 const Dashboard = () => {
-  console.log('Arquivo Dashboard.tsx carregado!');
-  const { currentUser, userType, isAuthenticated, logout } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<any[]>([]);
-  const [loading, setPetsLoading] = useState(true);
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
-  const [agendamentosLoading, setAgendamentosLoading] = useState(true);
-  const [editingPet, setEditingPet] = useState<any>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [loadingPets, setLoadingPets] = useState(true);
+  const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
+  const [errorPets, setErrorPets] = useState<string | null>(null);
+  const [errorAgendamentos, setErrorAgendamentos] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && userType === 'tutor' && currentUser?.tutor_id) {
-      loadPets(currentUser.tutor_id);
-      loadAgendamentos(currentUser.tutor_id);
+    if (user?.tutor_id) {
+      carregarPets();
+      carregarAgendamentos();
     }
-  }, [isAuthenticated, userType, currentUser]);
+  }, [user]);
 
-  const loadPets = async (tutorId: string) => {
+  const carregarPets = async () => {
+    if (!user?.tutor_id) return;
+    
     try {
-      setPetsLoading(true);
-      console.log("Fetching pets for tutor ID:", tutorId);
+      setLoadingPets(true);
+      setErrorPets(null);
       
-      const response = await api.buscarPetsDoTutor(tutorId);
-      
-      console.log("API response for pets:", response);
+      const response = await api.buscarPetsTutor(user.tutor_id.toString());
       
       if (response.sucesso) {
-        setPets(response.dados.pets || []);
+        setPets(response.dados?.pets || []);
       } else {
-        console.error("Failed to load pets:", response.erro);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar seus pets: ' + (response.erro || 'Erro desconhecido'),
-          variant: 'destructive',
-        });
+        setErrorPets(response.erro || 'Erro ao carregar pets');
       }
     } catch (error) {
       console.error('Erro ao carregar pets:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar seus pets',
-        variant: 'destructive',
-      });
+      setErrorPets('Erro ao conectar com o servidor');
     } finally {
-      setPetsLoading(false);
+      setLoadingPets(false);
     }
   };
 
-  const loadAgendamentos = async (tutorId: string) => {
+  const carregarAgendamentos = async () => {
+    if (!user?.tutor_id) return;
+    
     try {
-      setAgendamentosLoading(true);
-      console.log("Fetching agendamentos for tutor ID:", tutorId);
+      setLoadingAgendamentos(true);
+      setErrorAgendamentos(null);
       
-      const response = await api.buscarAgendamentosTutor(tutorId);
-      
-      console.log("API response for agendamentos:", response);
+      const response = await api.buscarAgendamentosTutor(user.tutor_id.toString());
       
       if (response.sucesso) {
-        setAgendamentos(response.dados.agendamentos || []);
+        setAgendamentos(response.dados?.agendamentos || []);
       } else {
-        console.error("Failed to load agendamentos:", response.erro);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar seus agendamentos: ' + (response.erro || 'Erro desconhecido'),
-          variant: 'destructive',
-        });
+        setErrorAgendamentos(response.erro || 'Erro ao carregar agendamentos');
       }
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar seus agendamentos',
-        variant: 'destructive',
-      });
+      setErrorAgendamentos('Erro ao conectar com o servidor');
     } finally {
-      setAgendamentosLoading(false);
+      setLoadingAgendamentos(false);
     }
   };
 
-  const handleEditPet = (pet: any) => {
-    setEditingPet(pet);
-    setIsEditDialogOpen(true);
-  };
-
-  const handlePetUpdated = (updatedPet: any) => {
-    if (currentUser?.tutor_id) {
-      loadPets(currentUser.tutor_id);
-    }
-    setIsEditDialogOpen(false);
-    toast({
-      title: 'Sucesso',
-      description: 'Pet atualizado com sucesso!',
-    });
-  };
-
-  const handleDeletePet = async (petId: string) => {
-    try {
-      const response = await api.deletarPet(petId);
-      if (response.sucesso) {
-        toast({
-          title: 'Sucesso',
-          description: 'Pet removido com sucesso!',
-        });
-        if (currentUser?.tutor_id) {
-          loadPets(currentUser.tutor_id);
-        }
-      } else {
-        toast({
-          title: 'Erro',
-          description: response.erro || 'Não foi possível remover o pet',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao deletar pet:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao remover o pet',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleLogoutClick = () => {
-    logout();
-  };
-
-  // Formata a data no formato brasileiro
   const formatarData = (dataString: string) => {
+    if (!dataString) return 'Data não informada';
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR');
   };
 
-  // Redirect if user is not a tutor but is authenticated
-  if (isAuthenticated && userType !== 'tutor') {
-    return <Navigate to="/dashboard/organizacao" />;
-  }
-
-  // Show login prompt if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <MainLayout>
-        <div className="container py-8">
-          <div className="flex justify-center items-center min-h-[60vh]">
-            <Card className="w-full max-w-md">
-              <CardHeader className="text-center">
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle>Acesso Restrito</CardTitle>
-                <CardDescription>
-                  Você precisa estar logado para acessar o dashboard
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  Para ver suas informações, pets e agendamentos, você precisa fazer login ou criar uma conta.
-                </p>
-                <div className="space-y-2">
-                  <Button className="w-full" asChild>
-                    <Link to="/login">
-                      <User className="mr-2 h-4 w-4" />
-                      Fazer Login
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link to="/cadastro">
-                      Criar Conta
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  const handleRemoverPet = async (petId: string) => {
+    try {
+      await api.removerPet(petId);
+      toast({
+        title: 'Pet removido',
+        description: 'O pet foi removido com sucesso.',
+      });
+      carregarPets();
+    } catch (error) {
+      console.error('Erro ao remover pet:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível remover o pet. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <MainLayout>
       <div className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Bem-vindo(a), {currentUser?.nome || ''}!
-            </p>
-          </div>
-          
-          <Button className="mt-4 md:mt-0" asChild>
-            <Link to="/cadastro/pet">
-              <Dog className="mr-2 h-4 w-4" />
-              Cadastrar Novo Pet
-            </Link>
-          </Button>
-        </div>
+        <h1 className="text-3xl font-bold mb-2">Meu Painel</h1>
+        <p className="text-muted-foreground mb-8">
+          Bem-vindo(a), {user?.nome}! Gerencie seus pets e agendamentos.
+        </p>
 
-        <Tabs defaultValue="meus-pets" className="w-full">
-          <TabsList className="mb-8">
-            <TabsTrigger value="meus-pets">
-              <Dog className="mr-2 h-4 w-4" />
-              Meus Pets
-            </TabsTrigger>
-            <TabsTrigger value="agendamentos">
-              <Calendar className="mr-2 h-4 w-4" />
-              Mutirões
-            </TabsTrigger>
-            <TabsTrigger value="config">
-              <Settings className="mr-2 h-4 w-4" />
-              Configurações
-            </TabsTrigger>
+        <Tabs defaultValue="pets" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="pets">Meus Pets</TabsTrigger>
+            <TabsTrigger value="agendamentos">Meus Agendamentos</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="meus-pets" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Meus Pets</h2>
-            
-            {loading ? (
-              <p>Carregando seus pets...</p>
+          <TabsContent value="pets" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Meus Pets</h2>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={carregarPets}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/cadastro/pet">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Cadastrar Pet
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {errorPets && (
+              <div className="bg-destructive/15 text-destructive p-4 rounded-md flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 mt-0.5" />
+                <div>
+                  <p className="font-medium">Erro ao carregar pets</p>
+                  <p className="text-sm">{errorPets}</p>
+                </div>
+              </div>
+            )}
+
+            {loadingPets ? (
+              <div className="text-center py-8">
+                <p>Carregando seus pets...</p>
+              </div>
             ) : pets.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {pets.map((pet) => (
                   <Card key={pet.pet_id}>
-                    <CardHeader>
-                      <CardTitle className="flex justify-between items-center">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Dog className="h-5 w-5 text-primary" />
                         {pet.nome}
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditPet(pet)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeletePet(pet.pet_id)}
-                          >
-                            <Trash className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
                       </CardTitle>
                       <CardDescription>
                         {pet.especie} • {pet.raca}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="font-medium">Idade</p>
-                          <p>{pet.idade} anos</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Idade:</span>
+                          <span>{pet.idade} anos</span>
                         </div>
-                        <div>
-                          <p className="font-medium">Peso</p>
-                          <p>{pet.peso} kg</p>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Sexo:</span>
+                          <span>{pet.sexo === 'M' ? 'Macho' : 'Fêmea'}</span>
                         </div>
-                        <div>
-                          <p className="font-medium">Sexo</p>
-                          <p>{pet.sexo === 'M' ? 'Macho' : 'Fêmea'}</p>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Peso:</span>
+                          <span>{pet.peso} kg</span>
+                        </div>
+                        <div className="pt-4 flex justify-end gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/editar/pet/${pet.pet_id}`}>
+                              Editar
+                            </Link>
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleRemoverPet(pet.pet_id)}
+                          >
+                            Remover
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -296,79 +189,71 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-12 bg-muted rounded-lg">
                 <Dog className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                <p className="text-muted-foreground">Você ainda não cadastrou nenhum pet.</p>
-                <Button className="mt-4" asChild>
-                  <Link to="/cadastro/pet">
-                    <Dog className="mr-2 h-4 w-4" />
-                    Cadastrar Pet
-                  </Link>
-                </Button>
+                <p className="text-muted-foreground">
+                  Você ainda não cadastrou nenhum pet.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Clique em "Cadastrar Pet" para adicionar seu primeiro pet.
+                </p>
               </div>
             )}
           </TabsContent>
-          
-          <TabsContent value="agendamentos">
-            <h2 className="text-xl font-semibold mb-4">Meus Agendamentos de Mutirão</h2>
-            
-            {agendamentosLoading ? (
-              <p>Carregando seus agendamentos...</p>
+
+          <TabsContent value="agendamentos" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Meus Agendamentos</h2>
+              <Button variant="outline" size="sm" onClick={carregarAgendamentos}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Atualizar
+              </Button>
+            </div>
+
+            {errorAgendamentos && (
+              <div className="bg-destructive/15 text-destructive p-4 rounded-md flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 mt-0.5" />
+                <div>
+                  <p className="font-medium">Erro ao carregar agendamentos</p>
+                  <p className="text-sm">{errorAgendamentos}</p>
+                </div>
+              </div>
+            )}
+
+            {loadingAgendamentos ? (
+              <div className="text-center py-8">
+                <p>Carregando seus agendamentos...</p>
+              </div>
             ) : agendamentos.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid gap-4">
                 {agendamentos.map((agendamento) => (
                   <Card key={agendamento.agendamento_id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <CardTitle>Mutirão de Castração</CardTitle>
-                          <CardDescription>
-                            {formatarData(agendamento.data_mutirao)}
-                          </CardDescription>
-                        </div>
-                        <Badge
-                          className={
-                            agendamento.status === 'Agendado' 
-                              ? 'bg-blue-500' 
-                              : agendamento.status === 'Confirmado' 
-                                ? 'bg-green-500' 
-                                : agendamento.status === 'Realizado' 
-                                  ? 'bg-green-700'
-                                  : 'bg-red-500'
-                          }
-                        >
-                          {agendamento.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-2">
-                          <div className="mt-1"><Dog className="h-5 w-5 text-primary" /></div>
-                          <div>
-                            <p className="font-medium">Pet</p>
-                            <p>{agendamento.nome_pet}</p>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Dog className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{agendamento.nome_pet}</span>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2">
-                          <div className="mt-1"><MapPin className="h-5 w-5 text-primary" /></div>
-                          <div>
-                            <p className="font-medium">Local</p>
-                            <p>{agendamento.nome_ong}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            <span>Data: {formatarData(agendamento.data_mutirao)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                            <span>{agendamento.endereco_mutirao}</span>
+                          </div>
+                          {agendamento.observacoes && (
                             <p className="text-sm text-muted-foreground">
-                              {agendamento.endereco_ong}, {agendamento.cidade_ong}/{agendamento.estado_ong}
+                              Observações: {agendamento.observacoes}
                             </p>
-                          </div>
+                          )}
                         </div>
-                        
-                        {agendamento.observacoes && (
-                          <div className="flex items-start gap-2">
-                            <div className="mt-1"><HelpCircle className="h-5 w-5 text-primary" /></div>
-                            <div>
-                              <p className="font-medium">Observações</p>
-                              <p className="text-sm">{agendamento.observacoes}</p>
-                            </div>
-                          </div>
-                        )}
+                        <div className="flex flex-col gap-2">
+                          <CancelarAgendamentoDialog
+                            agendamentoId={agendamento.agendamento_id}
+                            nomePet={agendamento.nome_pet}
+                            onCancelado={carregarAgendamentos}
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -377,53 +262,20 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-12 bg-muted rounded-lg">
                 <Calendar className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                <p className="text-muted-foreground">Você ainda não possui agendamentos em mutirões.</p>
+                <p className="text-muted-foreground">
+                  Você não possui agendamentos de castração.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Visite a página de mutirões para agendar uma castração.
+                </p>
                 <Button className="mt-4" asChild>
-                  <Link to="/mutiroes">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Ver Mutirões Disponíveis
-                  </Link>
+                  <Link to="/mutiroes">Ver mutirões disponíveis</Link>
                 </Button>
               </div>
             )}
           </TabsContent>
-          
-          <TabsContent value="config">
-            <h2 className="text-xl font-semibold mb-4">Configurações</h2>
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações de Conta</CardTitle>
-                <CardDescription>
-                  Gerencie as configurações da sua conta e preferências
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <h3 className="font-medium">Alterar Senha</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Funcionalidade de alteração de senha estará disponível em breve.
-                  </p>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <Button variant="destructive" onClick={handleLogoutClick}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair da Conta
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
-      
-      {/* Edit Pet Dialog */}
-      {editingPet && isEditDialogOpen && (
-        <EditPetDialog
-          pet={editingPet}
-          onPetUpdated={handlePetUpdated}
-        />
-      )}
     </MainLayout>
   );
 };

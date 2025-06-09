@@ -297,6 +297,61 @@ app.post('/api/agendamentos', async (req, res) => {
   }
 });
 
+// Rota para cancelar um agendamento
+app.delete('/api/agendamentos/:agendamentoId', async (req, res) => {
+  try {
+    const { agendamentoId } = req.params;
+    
+    // Verificar se o agendamento existe e buscar o mutirao_id
+    const agendamentoCheck = await query(
+      'SELECT mutirao_id FROM agendamentos WHERE agendamento_id = $1',
+      [agendamentoId]
+    );
+    
+    if (agendamentoCheck.rows.length === 0) {
+      return res.status(404).json({ sucesso: false, erro: 'Agendamento não encontrado' });
+    }
+    
+    const mutiraoId = agendamentoCheck.rows[0].mutirao_id;
+    
+    // Cancelar o agendamento em uma transação
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Deletar o agendamento
+      await client.query(
+        'DELETE FROM agendamentos WHERE agendamento_id = $1',
+        [agendamentoId]
+      );
+      
+      // Incrementar as vagas disponíveis no mutirão
+      await client.query(
+        'UPDATE mutiroes SET vagas_disponiveis = vagas_disponiveis + 1 WHERE mutirao_id = $1',
+        [mutiraoId]
+      );
+      
+      await client.query('COMMIT');
+      
+      res.json({ 
+        sucesso: true, 
+        mensagem: 'Agendamento cancelado com sucesso' 
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Erro ao cancelar agendamento:', error);
+    res.status(500).json({ 
+      sucesso: false, 
+      erro: 'Erro ao cancelar agendamento: ' + error.message 
+    });
+  }
+});
+
 // Rota de login para tutor
 app.post('/api/login/tutor', async (req, res) => {
   const { email, senha } = req.body;
