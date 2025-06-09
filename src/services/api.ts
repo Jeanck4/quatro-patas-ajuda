@@ -95,18 +95,38 @@ export const inserirPet = async (petData: any, tutorId: string) => {
 };
 
 // Função para cancelar/remover agendamento de mutirão
-export const cancelarAgendamento = async (agendamento_Id: string) => {
+export const cancelarAgendamento = async (agendamentoId: string) => {
   try {
-    const response = await fetch(`${API_URL}/agendamentos/${agendamento_Id}`, {
-      method: 'DELETE'
+    console.log(`Tentando cancelar agendamento ID: ${agendamentoId}`);
+    
+    const response = await fetch(`${API_URL}/agendamentos/${agendamentoId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
+    console.log(`Status da resposta: ${response.status}`);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.erro || 'Erro ao cancelar agendamento');
+      const errorText = await response.text();
+      console.error('Erro na resposta:', errorText);
+      
+      // Se a resposta não for JSON válido, tenta interpretar como HTML de erro
+      if (errorText.includes('<!DOCTYPE')) {
+        throw new Error('Erro de comunicação com o servidor');
+      }
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.erro || 'Erro ao cancelar agendamento');
+      } catch (parseError) {
+        throw new Error('Erro ao cancelar agendamento');
+      }
     }
 
     const result = await response.json();
+    console.log('Agendamento cancelado com sucesso:', result);
     return result;
   } catch (error: any) {
     console.error('Erro ao cancelar agendamento:', error);

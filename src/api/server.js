@@ -301,6 +301,7 @@ app.post('/api/agendamentos', async (req, res) => {
 app.delete('/api/agendamentos/:agendamentoId', async (req, res) => {
   try {
     const { agendamentoId } = req.params;
+    console.log(`Tentando cancelar agendamento ID: ${agendamentoId}`);
     
     // Verificar se o agendamento existe e buscar o mutirao_id
     const agendamentoCheck = await query(
@@ -309,10 +310,12 @@ app.delete('/api/agendamentos/:agendamentoId', async (req, res) => {
     );
     
     if (agendamentoCheck.rows.length === 0) {
+      console.log(`Agendamento ${agendamentoId} não encontrado`);
       return res.status(404).json({ sucesso: false, erro: 'Agendamento não encontrado' });
     }
     
     const mutiraoId = agendamentoCheck.rows[0].mutirao_id;
+    console.log(`Agendamento encontrado, mutirao_id: ${mutiraoId}`);
     
     // Cancelar o agendamento em uma transação
     const client = await pool.connect();
@@ -320,16 +323,20 @@ app.delete('/api/agendamentos/:agendamentoId', async (req, res) => {
       await client.query('BEGIN');
       
       // Deletar o agendamento
-      await client.query(
+      const deleteResult = await client.query(
         'DELETE FROM agendamentos WHERE agendamento_id = $1',
         [agendamentoId]
       );
       
+      console.log(`Agendamento deletado, linhas afetadas: ${deleteResult.rowCount}`);
+      
       // Incrementar as vagas disponíveis no mutirão
-      await client.query(
+      const updateResult = await client.query(
         'UPDATE mutiroes SET vagas_disponiveis = vagas_disponiveis + 1 WHERE mutirao_id = $1',
         [mutiraoId]
       );
+      
+      console.log(`Vagas atualizadas, linhas afetadas: ${updateResult.rowCount}`);
       
       await client.query('COMMIT');
       
@@ -339,6 +346,7 @@ app.delete('/api/agendamentos/:agendamentoId', async (req, res) => {
       });
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error('Erro na transação:', error);
       throw error;
     } finally {
       client.release();
