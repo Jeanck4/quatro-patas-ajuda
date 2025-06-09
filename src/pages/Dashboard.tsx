@@ -27,6 +27,7 @@ import * as api from '@/services/api';
 import { Dog, Calendar, Settings, LogOut, Trash, Pencil, MapPin, HelpCircle, User } from 'lucide-react';
 
 const Dashboard = () => {
+  console.log('Arquivo Dashboard.tsx carregado!');
   const { currentUser, userType, isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<any[]>([]);

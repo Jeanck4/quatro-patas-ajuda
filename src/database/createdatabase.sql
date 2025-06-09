@@ -1,4 +1,3 @@
-
 -- Tabela para armazenar informações das organizações
 CREATE TABLE organizacoes (
     organizacao_id SERIAL PRIMARY KEY,

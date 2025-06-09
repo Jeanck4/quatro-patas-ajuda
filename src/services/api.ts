@@ -94,6 +94,26 @@ export const inserirPet = async (petData: any, tutorId: string) => {
   }
 };
 
+// Função para cancelar/remover agendamento de mutirão
+export const cancelarAgendamento = async (agendamento_Id: string) => {
+  try {
+    const response = await fetch(`${API_URL}/agendamentos/${agendamento_Id}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Erro ao cancelar agendamento');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error('Erro ao cancelar agendamento:', error);
+    throw error;
+  }
+};
+
 // Função para cadastrar organização
 export const inserirOrganizacao = async (organizacaoData: any) => {
   try {
