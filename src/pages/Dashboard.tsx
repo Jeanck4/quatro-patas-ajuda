@@ -1,17 +1,18 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/layouts/MainLayout';
 import * as api from '@/services/api';
-import { Dog, Calendar, MapPin, RefreshCw, AlertCircle, Plus } from 'lucide-react';
+import { Dog, Calendar, MapPin, RefreshCw, AlertCircle, Plus, LogIn, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CancelarAgendamentoDialog } from '@/components/CancelarAgendamentoDialog';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { currentUser, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<any[]>([]);
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
@@ -21,20 +22,53 @@ const Dashboard = () => {
   const [errorAgendamentos, setErrorAgendamentos] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.tutor_id) {
+    if (currentUser?.tutor_id) {
       carregarPets();
       carregarAgendamentos();
     }
-  }, [user]);
+  }, [currentUser]);
+
+  // Se não estiver autenticado, mostra mensagem para fazer login
+  if (!isAuthenticated || !currentUser) {
+    return (
+      <MainLayout>
+        <div className="container py-8">
+          <div className="text-center py-12 bg-muted rounded-lg">
+            <div className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4 flex items-center justify-center">
+              <LogIn className="h-8 w-8" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Acesso restrito</h2>
+            <p className="text-muted-foreground mb-6">
+              Você precisa estar logado para acessar o painel de controle.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button asChild>
+                <Link to="/login">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Fazer Login
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/cadastro">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Criar Conta
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   const carregarPets = async () => {
-    if (!user?.tutor_id) return;
+    if (!currentUser?.tutor_id) return;
     
     try {
       setLoadingPets(true);
       setErrorPets(null);
       
-      const response = await api.buscarPetsTutor(user.tutor_id.toString());
+      const response = await api.buscarPetsTutor(currentUser.tutor_id.toString());
       
       if (response.sucesso) {
         setPets(response.dados?.pets || []);
@@ -50,13 +84,13 @@ const Dashboard = () => {
   };
 
   const carregarAgendamentos = async () => {
-    if (!user?.tutor_id) return;
+    if (!currentUser?.tutor_id) return;
     
     try {
       setLoadingAgendamentos(true);
       setErrorAgendamentos(null);
       
-      const response = await api.buscarAgendamentosTutor(user.tutor_id.toString());
+      const response = await api.buscarAgendamentosTutor(currentUser.tutor_id.toString());
       
       if (response.sucesso) {
         setAgendamentos(response.dados?.agendamentos || []);
@@ -100,7 +134,7 @@ const Dashboard = () => {
       <div className="container py-8">
         <h1 className="text-3xl font-bold mb-2">Meu Painel</h1>
         <p className="text-muted-foreground mb-8">
-          Bem-vindo(a), {user?.nome}! Gerencie seus pets e agendamentos.
+          Bem-vindo(a), {currentUser?.nome}! Gerencie seus pets e agendamentos.
         </p>
 
         <Tabs defaultValue="pets" className="space-y-6">
